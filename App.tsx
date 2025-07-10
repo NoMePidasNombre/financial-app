@@ -7,15 +7,12 @@
 
 import React from 'react';
 import { StatusBar, StyleSheet, useColorScheme, View, Text, TouchableOpacity } from 'react-native';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
-  // Datos de ejemplo
-  const saldo = 12500.75;
-  const gastos = 3200.50;
-
-  const TopMenu = () => (
-    <View style={styles.topMenuContainer}>
+function TopMenu() {
+  const insets = useSafeAreaInsets();
+  return (
+    <View style={[styles.topMenuContainer, { paddingTop: insets.top }]}>
       <TouchableOpacity style={styles.menuButton}>
         <Text style={styles.menuIcon}>☰</Text>
       </TouchableOpacity>
@@ -32,9 +29,12 @@ function App() {
       </View>
     </View>
   );
+}
 
-  const Menu = () => (
-    <View style={styles.menuContainer}>
+function Menu() {
+  const insets = useSafeAreaInsets();
+  return (
+    <View style={[styles.menuContainer, { paddingBottom: insets.bottom }]}>
       <View style={styles.menuGroup}>
         <TouchableOpacity style={styles.menuButton}>
           <Text style={styles.menuIcon}>🏠</Text>
@@ -53,6 +53,13 @@ function App() {
       </View>
     </View>
   );
+}
+
+function AppContent() {
+  const isDarkMode = useColorScheme() === 'dark';
+  // Datos de ejemplo
+  const saldo = 12500.75;
+  const gastos = 3200.50;
 
   return (
     <View style={styles.container}>
@@ -70,6 +77,14 @@ function App() {
         <Text style={styles.centralIcon}>➕</Text>
       </TouchableOpacity>
     </View>
+  );
+}
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <AppContent />
+    </SafeAreaProvider>
   );
 }
 
@@ -159,5 +174,3 @@ const styles = StyleSheet.create({
     width: '30%',
   },
 });
-
-export default App;
