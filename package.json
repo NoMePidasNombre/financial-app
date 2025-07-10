@@ -1,5 +1,5 @@
 {
-  "name": "financialApp",
+  "name": "financial-app",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -9,12 +9,14 @@
   "dependencies": {
     "expo": "^53.0.19",
     "react": "19.1.0",
-    "react-native": "0.80.1"
+    "react-native": "0.80.1",
+    "react-native-safe-area-context": "^5.5.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@babel/preset-env": "^7.25.3",
     "@babel/runtime": "^7.25.0",
+    "@react-native-community/cli": "latest",
     "@types/jest": "^29.5.13",
     "@types/react": "^19.1.0",
     "@types/react-test-renderer": "^19.1.0",
