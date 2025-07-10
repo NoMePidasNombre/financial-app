@@ -10,18 +10,29 @@ import { StatusBar, StyleSheet, useColorScheme, View, Text } from 'react-native'
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
   // Datos de ejemplo
-  const saldo = 12500.75;
-  const gastos = 3200.50;
+  const saldo = 1000.0;
+  const gastos = 10000.0;
+  const usuario = 'USER123';
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <View style={styles.card}>
-        <Text style={styles.titulo}>Resumen financiero</Text>
-        <Text style={styles.label}>Saldo:</Text>
-        <Text style={styles.saldo}>${saldo.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</Text>
-        <Text style={styles.label}>Gastos:</Text>
-        <Text style={styles.gastos}>${gastos.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</Text>
+      <Text style={styles.bienvenida}>BIENVENIDO {usuario}</Text>
+      <View style={styles.cardDatos}>
+        <Text style={styles.tituloCard}>Datos Mensuales</Text>
+        <View style={styles.filaDatos}>
+          <Text style={styles.labelDatos}>Dinero disponible</Text>
+          <Text style={styles.saldoDatos}>${saldo.toLocaleString('es-AR', { minimumFractionDigits: 3 })}</Text>
+        </View>
+        <View style={styles.filaDatos}>
+          <Text style={styles.labelDatos}>Gastos</Text>
+          <Text style={styles.gastosDatos}>${gastos.toLocaleString('es-AR', { minimumFractionDigits: 3 })}</Text>
+        </View>
+      </View>
+      <View style={styles.cardMetas}>
+        <Text style={styles.tituloCard}>METAS</Text>
+        <View style={styles.metaBox} />
+        <View style={styles.metaBox} />
       </View>
     </View>
   );
@@ -30,43 +41,77 @@ function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: '#0a2a36',
     alignItems: 'center',
-    backgroundColor: '#f5f6fa',
+    paddingTop: 40,
   },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 32,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    alignItems: 'center',
-    width: 320,
-  },
-  titulo: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#222',
-  },
-  label: {
-    fontSize: 16,
-    color: '#888',
-    marginTop: 8,
-  },
-  saldo: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#27ae60',
-    marginBottom: 8,
-  },
-  gastos: {
+  bienvenida: {
+    color: '#fff',
     fontSize: 24,
+    marginBottom: 24,
+    marginTop: 16,
+    letterSpacing: 1,
+    textAlign: 'center',
+  },
+  cardDatos: {
+    backgroundColor: '#1a234d',
+    borderRadius: 12,
+    padding: 18,
+    marginBottom: 32,
+    width: '90%',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#232c5c',
+  },
+  tituloCard: {
+    color: '#fff',
+    fontSize: 20,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  filaDatos: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#232c5c',
+    borderRadius: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginBottom: 12,
+    width: '95%',
+  },
+  labelDatos: {
+    color: '#fff',
+    fontSize: 16,
+    flex: 1,
+  },
+  saldoDatos: {
+    color: '#00b894',
+    fontSize: 18,
     fontWeight: 'bold',
+  },
+  gastosDatos: {
     color: '#e74c3c',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  cardMetas: {
+    backgroundColor: '#1a234d',
+    borderRadius: 12,
+    padding: 18,
+    width: '90%',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#232c5c',
+  },
+  metaBox: {
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: '#232c5c',
+    borderRadius: 4,
+    height: 40,
+    width: '95%',
+    marginVertical: 10,
   },
 });
 
