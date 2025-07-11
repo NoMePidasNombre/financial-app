@@ -1,3 +1,4 @@
+
 /**
  * Sample React Native App
  * https://github.com/facebook/react-native
@@ -7,120 +8,88 @@
 
 import React from 'react';
 import { StatusBar, StyleSheet, useColorScheme, View, Text, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
-import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import TopMenu from './components/TopMenu';
+import Menu from './components/Menu';
+import WelcomeMessage from './components/WelcomeMessage';
+import GoalsCard from './components/GoalsCard';
+import TransactionModal from './components/TransactionModal';
+import TransactionHistoryModal from './components/TransactionHistoryModal';
 
 const { width, height } = Dimensions.get('window');
 
-function TopMenu() {
-  const insets = useSafeAreaInsets();
-  return (
-    <View style={[styles.topMenuContainer, { paddingTop: insets.top }]}>
-      <TouchableOpacity style={styles.menuButton}>
-        <Text style={styles.menuIcon}>☰</Text>
-      </TouchableOpacity>
-      <View style={styles.rightMenuGroup}>
-        <TouchableOpacity style={styles.menuButton}>
-          <Text style={styles.menuIcon}>🔔</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuButton}>
-          <Text style={styles.menuIcon}>⟳</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuButton}>
-          <Text style={styles.menuIcon}>👤</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-}
-
-function Menu() {
-  const insets = useSafeAreaInsets();
-  return (
-    <View style={[styles.menuContainer, { paddingBottom: insets.bottom }]}>
-      <View style={styles.menuGroup}>
-        <TouchableOpacity style={styles.menuButton}>
-          <Text style={styles.menuIcon}>🏠</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuButton}>
-          <Text style={styles.menuIcon}>🏆</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.menuGroup}>
-        <TouchableOpacity style={styles.menuButton}>
-          <Text style={styles.menuIcon}>📊</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuButton}>
-          <Text style={styles.menuIcon}>🛒</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-}
-
-function WelcomeMessage() {
-  return (
-    <View style={styles.welcomeContainer}>
-      <Text style={styles.welcomeText}>¡BIENVENIDO USER123!</Text>
-    </View>
-  );
-}
-
-// Ajustar el orden de los elementos en las metas
-function GoalsCard() {
-  return (
-    <View style={styles.card}>
-      <Text style={[styles.titulo, { textAlign: 'center' }]}>Metas</Text>
-      <View style={styles.goalRowContainer}>
-        <View style={styles.goalRow}>
-          <Text style={styles.goalIcon}>🐖</Text>
-          <Text style={styles.goalText}>Inversión</Text>
-          <View style={styles.goalProgressBarBackground}>
-            <View style={[styles.goalProgressBar, { width: '75%' }]} />
-          </View>
-        </View>
-        <Text style={styles.goalProgressValue}>75000/100000</Text>
-      </View>
-      <View style={styles.goalRowContainer}>
-        <View style={styles.goalRow}>
-          <Text style={styles.goalIcon}>🏖️</Text>
-          <Text style={styles.goalText}>Vacaciones</Text>
-          <View style={styles.goalProgressBarBackground}>
-            <View style={[styles.goalProgressBar, { width: '50%' }]} />
-          </View>
-        </View>
-        <Text style={styles.goalProgressValue}>50000/100000</Text>
-      </View>
-    </View>
-  );
-}
+import { useState } from 'react';
+import { TextInput, Platform } from 'react-native';
+import { BlurView } from 'expo-blur';
 
 function AppContent() {
   const isDarkMode = useColorScheme() === 'dark';
-  // Datos de ejemplo
-  const saldo = 12500.75;
-  const gastos = 3200.50;
+  // Estado de datos mensuales
+  const [saldo, setSaldo] = useState(12500.75);
+  const [gastos, setGastos] = useState(3200.50);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [historyVisible, setHistoryVisible] = useState(false);
+  const [transactions, setTransactions] = useState<any[]>([]);
+
+  // Manejar aceptar transacción
+  const handleAceptar = (monto: number, categoria: string, medio: string, tipo: 'ingreso' | 'gasto') => {
+    const now = new Date();
+    const fecha = now.toLocaleDateString('es-AR');
+    const hora = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+    setTransactions(prev => [
+      { tipo, categoria, medio, monto, fecha, hora },
+      ...prev,
+    ]);
+    if (tipo === 'ingreso') {
+      setSaldo(prev => prev + monto);
+    } else {
+      setSaldo(prev => prev - monto);
+      setGastos(prev => prev + monto);
+    }
+    setModalVisible(false);
+  };
+
+  // Manejar cerrar modal
+  const handleCerrar = () => {
+    setModalVisible(false);
+    setHistoryVisible(false);
+  };
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <TopMenu />
+      <TopMenu styles={styles} onHistory={() => setHistoryVisible(true)} />
       <ScrollView contentContainerStyle={styles.scrollContainer} style={styles.scrollView}>
-        <View style={styles.welcomeMessageContainer}> {/* Agregar un contenedor para ajustar la posición */}
-          <WelcomeMessage />
+        <View style={styles.welcomeMessageContainer}>
+          <WelcomeMessage styles={styles} />
         </View>
-        <View style={[styles.card, { marginBottom: height * 0.04 }]}>
+        <View style={[styles.card, { marginBottom: height * 0.04 }]}> 
           <Text style={[styles.titulo, { textAlign: 'center' }]}>Datos Mensuales</Text>
           <Text style={styles.label}>Saldo:</Text>
           <Text style={styles.saldo}>${saldo.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</Text>
           <Text style={styles.label}>Gastos:</Text>
           <Text style={styles.gastos}>${gastos.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</Text>
         </View>
-        <GoalsCard />
+        <GoalsCard styles={styles} />
       </ScrollView>
-      <Menu />
-      <TouchableOpacity style={styles.centralButton}>
+      <Menu styles={styles} />
+      <TouchableOpacity style={styles.centralButton} onPress={() => setModalVisible(true)}>
         <Text style={styles.centralIcon}>➕</Text>
       </TouchableOpacity>
+      <TransactionModal
+        visible={modalVisible}
+        onClose={handleCerrar}
+        onAccept={handleAceptar}
+        styles={{ ...styles, customModal: { ...styles.customModal, top: height * 0.15, bottom: height * 0.12, left: width * 0.1, right: width * 0.1 } }}
+        isDarkMode={isDarkMode}
+      />
+      <TransactionHistoryModal
+        visible={historyVisible}
+        onClose={handleCerrar}
+        styles={{ ...styles, customModal: { ...styles.customModal, top: height * 0.15, bottom: height * 0.12, left: width * 0.1, right: width * 0.1 } }}
+        isDarkMode={isDarkMode}
+        transactions={transactions}
+      />
     </View>
   );
 }
@@ -134,6 +103,155 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  input: {
+    backgroundColor: '#222B3A',
+    color: '#fff',
+    borderRadius: 10,
+    paddingVertical: height * 0.012,
+    paddingHorizontal: width * 0.04,
+    fontSize: width * 0.045,
+    marginBottom: height * 0.015,
+    borderWidth: 1,
+    borderColor: '#0FFFFF',
+    width: '100%',
+    minHeight: 40,
+    justifyContent: 'center',
+  },
+  modalLabel: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: width * 0.045,
+    marginBottom: 2,
+    marginTop: height * 0.01,
+    alignSelf: 'flex-start',
+  },
+  dropdownMenu: {
+    // (Deprecated, replaced by dropdownMenuRelative)
+  },
+  dropdownMenuRelative: {
+    // (Deprecated, replaced by dropdownMenuAbsolute)
+  },
+  dropdownMenuAbsolute: {
+    backgroundColor: '#222B3A',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#0FFFFF',
+    width: '100%',
+    zIndex: 999,
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    elevation: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+  },
+  dropdownItem: {
+    paddingVertical: height * 0.012,
+    paddingHorizontal: width * 0.04,
+  },
+  dropdownText: {
+    color: '#fff',
+    fontSize: width * 0.045,
+  },
+  tipoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginVertical: height * 0.015,
+  },
+  tipoButton: {
+    flex: 1,
+    paddingVertical: height * 0.014,
+    marginHorizontal: width * 0.01,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  tipoIngreso: {
+    backgroundColor: '#27ae60',
+  },
+  tipoGasto: {
+    backgroundColor: '#e74c3c',
+  },
+  tipoUnselected: {
+    backgroundColor: '#222B3A',
+    borderWidth: 1,
+    borderColor: '#aaa',
+  },
+  tipoButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: width * 0.045,
+  },
+  modalButtonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: height * 0.02,
+  },
+  modalAcceptButton: {
+    backgroundColor: '#0FFFFF',
+    borderRadius: 16,
+    paddingVertical: height * 0.012,
+    paddingHorizontal: width * 0.08,
+    alignItems: 'center',
+    marginLeft: width * 0.04,
+  },
+  modalAcceptText: {
+    color: '#141F52',
+    fontWeight: 'bold',
+    fontSize: width * 0.045,
+  },
+  // Modal overlay y blur
+  modalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  absoluteFill: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  customModal: {
+    position: 'absolute',
+    backgroundColor: '#1A2A3AEE', // semi-transparente
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: width * 0.06,
+    zIndex: 101,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: width * 0.06,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: height * 0.02,
+    textAlign: 'center',
+  },
+  modalText: {
+    fontSize: width * 0.045,
+    color: '#fff',
+    marginBottom: height * 0.03,
+    textAlign: 'center',
+  },
+  modalCloseButton: {
+    backgroundColor: '#0FFFFF',
+    borderRadius: 16,
+    paddingVertical: height * 0.012,
+    paddingHorizontal: width * 0.08,
+    alignItems: 'center',
+  },
+  modalCloseText: {
+    color: '#141F52',
+    fontWeight: 'bold',
+    fontSize: width * 0.045,
+  },
   scrollView: {
     marginTop: height * 0.14, // Ajustar el inicio del ScrollView para que comience completamente alineado con el tamaño del menú superior
   },
@@ -194,8 +312,14 @@ const styles = StyleSheet.create({
   menuButton: {
     padding: width * 0.02,
   },
+  historyButton: {
+    padding: width * 0.02,
+  },
   menuIcon: {
     color: '#FFFFFF',
+    fontSize: width * 0.05,
+  },
+  historyIcon: {
     fontSize: width * 0.05,
   },
   centralButton: {
