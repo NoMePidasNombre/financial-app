@@ -18,15 +18,156 @@ interface Props {
   editMode?: boolean;
 }
 
-
 const categorias = ['Sueldo', 'Comida', 'Supermercado', 'Alquiler'];
 const medios = ['Efectivo', 'Transferencia', 'Bancarizado'];
+
+const styles = {
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+  },
+  absoluteFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 32,
+    overflow: 'hidden',
+  },
+  customModal: {
+    borderRadius: 32,
+    minWidth: 320,
+    maxWidth: 400,
+    width: '90%',
+    padding: 28,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    elevation: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 12,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 18,
+    textAlign: 'center',
+  },
+  modalLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginTop: 10,
+    marginBottom: 4,
+    alignSelf: 'flex-start',
+  },
+  input: {
+    width: '100%',
+    backgroundColor: 'rgba(26,35,77,0.85)',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#00b894',
+    color: '#fff',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  tipoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginTop: 16,
+    marginBottom: 16,
+  },
+  tipoButton: {
+    flex: 1,
+    borderRadius: 8,
+    paddingVertical: 12,
+    marginHorizontal: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tipoButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  modalButtonRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    marginTop: 10,
+  },
+  modalCloseButton: {
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#aaa',
+    marginRight: 8,
+  },
+  modalCloseText: {
+    fontSize: 16,
+    color: '#aaa',
+    fontWeight: 'bold',
+  },
+  modalAcceptButton: {
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  modalAcceptText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  dropdownMenuAbsolute: {
+    position: 'absolute',
+    top: 44,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(26,35,77,0.98)',
+    borderRadius: 8,
+    zIndex: 100,
+    paddingVertical: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 8,
+  },
+  dropdownItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+  },
+  dropdownText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+};
 
 export default function TransactionModal({ visible, onClose, onAccept, styles, isDarkMode, initialData, editMode }: Props) {
   const [monto, setMonto] = useState('');
   const [categoria, setCategoria] = useState('');
   const [medio, setMedio] = useState('');
-  const [tipo, setTipo] = useState<'ingreso' | 'gasto'>('ingreso');
+  // Usar el tipo inicial de la prop initialData si existe
+  const [tipo, setTipo] = useState<'ingreso' | 'gasto'>(initialData?.tipo || 'ingreso');
   const [categoriaMenu, setCategoriaMenu] = useState(false);
   const [medioMenu, setMedioMenu] = useState(false);
 
@@ -93,7 +234,8 @@ export default function TransactionModal({ visible, onClose, onAccept, styles, i
       setMonto('');
       setCategoria('');
       setMedio('');
-      setTipo('ingreso');
+      // Solo resetear tipo si no hay initialData
+      if (!initialData?.tipo) setTipo('ingreso');
     }
   }, [editMode, initialData, visible]);
 
@@ -136,21 +278,43 @@ export default function TransactionModal({ visible, onClose, onAccept, styles, i
 
   return (
     <View style={styles.modalOverlay}>
+      {/* Blur de fondo, cubre toda la pantalla */}
       <BlurView
         style={styles.absoluteFill}
-        intensity={70}
+        intensity={90} // Más intenso
         tint={isDarkMode ? 'dark' : 'light'}
+      />
+      {/* Capa de color dinámico sobre el blur, pero detrás del modal */}
+      <View
+        style={[
+          styles.absoluteFill,
+          {
+            backgroundColor: tipo === 'ingreso' ? 'rgba(0,184,148,0.18)' : 'rgba(231,76,60,0.18)',
+            zIndex: 1,
+          },
+        ]}
+        pointerEvents="none"
       />
       <Animated.View
         style={[
           styles.customModal,
           {
-            backgroundColor: bgColor,
+            backgroundColor: isDarkMode
+              ? (tipo === 'ingreso' ? 'rgba(0,184,148,0.22)' : 'rgba(231,76,60,0.22)')
+              : (tipo === 'ingreso' ? 'rgba(0,184,148,0.18)' : 'rgba(231,76,60,0.18)'),
+            borderWidth: 2.5,
+            borderColor: tipo === 'ingreso' ? '#00b894' : '#e74c3c',
+            shadowColor: tipo === 'ingreso' ? '#00b894' : '#e74c3c',
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.35,
+            shadowRadius: 24,
+            elevation: 24,
             transform: [
               { scale: scaleAnim },
               { translateY: translateYAnim },
             ],
             opacity: opacityAnim,
+            zIndex: 2,
           },
         ]}
       >
@@ -219,7 +383,7 @@ export default function TransactionModal({ visible, onClose, onAccept, styles, i
           </TouchableOpacity>
         </View>
         {/* Botones Cerrar y Aceptar */}
-        <View style={[styles.modalButtonRow, { justifyContent: 'center' }]}> 
+        <View style={[styles.modalButtonRow, { justifyContent: 'center' }]}>
           <TouchableOpacity
             style={[
               styles.modalCloseButton,

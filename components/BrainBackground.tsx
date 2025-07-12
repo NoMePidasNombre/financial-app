@@ -12,9 +12,11 @@ export default function BrainBackground() {
   const offsetX = -(imgWidth - width) / 2;
   const offsetY = -(imgHeight - height) / 2;
 
+  const BG = require('../assets/icons/brain-outline.png');
+
   return (
     <Image
-      source={require('../assets/brain-outline.png')}
+      source={BG}
       style={{
         position: 'absolute',
         left: offsetX,

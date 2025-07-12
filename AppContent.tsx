@@ -1,447 +1,263 @@
 import React, { useState } from 'react';
-import { StatusBar, useColorScheme, View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { StyleSheet, Dimensions } from 'react-native';
-import TopMenu from './components/TopMenu';
-import Menu from './components/Menu';
-import WelcomeMessage from './components/WelcomeMessage';
-import GoalsCard from './components/GoalsCard';
-import TransactionModal from './components/TransactionModal';
-import BrainBackground from './components/BrainBackground';
+import { StatusBar, StyleSheet, useColorScheme, View, Text, Image, TouchableOpacity, Dimensions, Alert } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const { width, height } = Dimensions.get('window');
+const ICONS = {
+    settings: require('./assets/icons/settings.png'), // engranaje
+    notifications: require('./assets/icons/notifications.png'), // campana
+    history: require('./assets/icons/history.png'), // reloj
+    profile: require('./assets/icons/profile.png'), // usuario
+    home: require('./assets/icons/home.png'), // home
+    goals: require('./assets/icons/goals.png'), // trofeo
+    plus: require('./assets/icons/plus.png'), // más (centro)
+    stats: require('./assets/icons/graphs.png'), // estadisticas
+    list: require('./assets/icons/calculate.png'), // lista
+};
+const BG = require('./assets/icons/brain-outline.png');
 
-export default function AppContent({ navigation, transactions, setTransactions, editIndex, editData, clearEdit }: any) {
-  const isDarkMode = useColorScheme() === 'dark';
-  const [saldo, setSaldo] = useState(12500.75);
-  const [gastos, setGastos] = useState(3200.50);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editMode, setEditMode] = useState(false);
-  const [editIdx, setEditIdx] = useState<number|null>(null);
-  const [initialData, setInitialData] = useState<any>(null);
+export default function AppContent({ saldo, gastos, usuario = 'USER123', onAddPress, onHistoryPress }) {
+    const isDarkMode = useColorScheme() === 'dark';
+    const insets = useSafeAreaInsets();
+    const { width, height } = Dimensions.get('window');
 
-  // Abrir modal para editar si editData cambia
-  React.useEffect(() => {
-    if (editData != null && editIndex != null) {
-      setEditMode(true);
-      setEditIdx(editIndex);
-      setInitialData(editData);
-      setModalVisible(true);
+    const topIcons = [
+        { icon: ICONS.settings, key: 'settings' },
+        { icon: ICONS.notifications, key: 'notifications' },
+        { icon: ICONS.history, key: 'history' },
+        { icon: ICONS.profile, key: 'profile' },
+    ];
+    const bottomIcons = [
+        { icon: ICONS.home, key: 'home' },
+        { icon: ICONS.goals, key: 'goals' },
+        { icon: ICONS.plus, key: 'plus' },
+        { icon: ICONS.stats, key: 'stats' },
+        { icon: ICONS.list, key: 'list' },
+    ];
+
+    function handleTopMenuPress(idx) {
+        if (idx === 2) {
+            if (onHistoryPress) {
+                onHistoryPress();
+            } else {
+                Alert.alert('Handler no asignado', 'No se pasó onHistoryPress al componente.');
+            }
+        }
     }
-  }, [editData, editIndex]);
-
-  // Manejar aceptar transacción (nuevo o edición)
-  const handleAceptar = (monto: number, categoria: string, medio: string, tipo: 'ingreso' | 'gasto') => {
-    let newTransactions = [...transactions];
-    let nuevoSaldo = saldo;
-    let nuevoGastos = gastos;
-    if (editMode && editIdx != null && initialData) {
-      // Restar el valor anterior
-      if (initialData.tipo === 'ingreso') {
-        nuevoSaldo -= initialData.monto;
-      } else {
-        nuevoSaldo += initialData.monto;
-        nuevoGastos -= initialData.monto;
-      }
-      // Actualizar la transacción
-      const now = new Date();
-      const fecha = now.toLocaleDateString('es-AR');
-      const hora = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
-      newTransactions[editIdx] = { tipo, categoria, medio, monto, fecha, hora };
-    } else {
-      // Nueva transacción
-      const now = new Date();
-      const fecha = now.toLocaleDateString('es-AR');
-      const hora = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
-      newTransactions = [
-        { tipo, categoria, medio, monto, fecha, hora },
-        ...transactions,
-      ];
+    function handleBottomMenuPress(idx) {
+        if (idx === 2) {
+            if (onAddPress) {
+                onAddPress();
+            } else {
+                Alert.alert('Handler no asignado', 'No se pasó onAddPress al componente.');
+            }
+        }
     }
-    // Sumar el nuevo valor
-    if (tipo === 'ingreso') {
-      nuevoSaldo += monto;
-    } else {
-      nuevoSaldo -= monto;
-      nuevoGastos += monto;
-    }
-    setTransactions(newTransactions);
-    setSaldo(nuevoSaldo);
-    setGastos(nuevoGastos);
-    setModalVisible(false);
-    setEditMode(false);
-    setEditIdx(null);
-    setInitialData(null);
-    if (clearEdit) clearEdit();
-  };
 
-  // Manejar cerrar modal
-  const handleCerrar = () => {
-    setModalVisible(false);
-    setEditMode(false);
-    setEditIdx(null);
-    setInitialData(null);
-    if (clearEdit) clearEdit();
-  };
+    // Estilos dependientes de dimensiones
+    const bgWatermarkStyle = {
+        position: "absolute" as const,
+        opacity: 0.08,
+        zIndex: 0,
+        width: width * 0.7,
+        height: width * 0.7,
+        top: height * 0.18,
+        left: width * 0.15,
+    };
 
-  return (
-    <View style={styles.container}>
-      <BrainBackground />
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <TopMenu styles={styles} onHistory={() => navigation.navigate('TransactionHistory')} />
-      <ScrollView contentContainerStyle={styles.scrollContainer} style={styles.scrollView}>
-        <View style={styles.welcomeMessageContainer}>
-          <WelcomeMessage styles={styles} />
+    return (
+        <View style={{ flex: 1, backgroundColor: '#0a2a36' }}>
+            {/* Marca de agua */}
+            <Image source={BG} style={bgWatermarkStyle} resizeMode="contain" />
+            <SafeAreaView style={styles.safeAreaBg}>
+                {/* Menú superior fijo */}
+                <View style={[styles.topMenu, { paddingTop: insets.top }]}>
+                    <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+                    {topIcons.map((item, idx) => (
+                        <TouchableOpacity key={item.key} style={styles.topIconBtn} onPress={() => handleTopMenuPress(idx)}>
+                            <Image source={item.icon} style={styles.topIcon} resizeMode="contain" />
+                        </TouchableOpacity>
+                    ))}
+                </View>
+                {/* Contenido principal */}
+                <View style={[styles.content, { paddingTop: 70 + insets.top, paddingBottom: 80 + insets.bottom }]}>
+                    <Text style={styles.bienvenida}>BIENVENIDO {usuario}</Text>
+                    <View style={styles.cardDatos}>
+                        <Text style={styles.tituloCard}>Datos Mensuales</Text>
+                        <View style={styles.filaDatos}>
+                            <Text style={styles.labelDatos}>Dinero disponible</Text>
+                            <Text style={styles.saldoDatos}>${saldo?.toLocaleString('es-AR', { minimumFractionDigits: 3 })}</Text>
+                        </View>
+                        <View style={styles.filaDatos}>
+                            <Text style={styles.labelDatos}>Gastos</Text>
+                            <Text style={styles.gastosDatos}>${gastos?.toLocaleString('es-AR', { minimumFractionDigits: 3 })}</Text>
+                        </View>
+                    </View>
+                    <View style={styles.cardMetas}>
+                        <Text style={styles.tituloCard}>METAS</Text>
+                        <View style={styles.metaBox} />
+                        <View style={styles.metaBox} />
+                    </View>
+                </View>
+                {/* Menú inferior fijo */}
+                <View style={[styles.bottomMenu, { paddingBottom: insets.bottom }]}>
+                    {bottomIcons.map((item, idx) => (
+                        <TouchableOpacity
+                            key={item.key}
+                            style={idx === 2 ? styles.centerBtn : styles.bottomIconBtn}
+                            onPress={() => handleBottomMenuPress(idx)}
+                        >
+                            <Image source={item.icon} style={idx === 2 ? styles.centerIcon : styles.bottomIcon} resizeMode="contain" />
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            </SafeAreaView>
         </View>
-        <View style={[styles.card, { marginBottom: height * 0.04 }]}> 
-          <Text style={[styles.titulo, { textAlign: 'center' }]}>Datos Mensuales</Text>
-          <Text style={styles.label}>Saldo:</Text>
-          <Text style={styles.saldo}>${saldo.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</Text>
-          <Text style={styles.label}>Gastos:</Text>
-          <Text style={styles.gastos}>${gastos.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</Text>
-        </View>
-        <GoalsCard styles={styles} />
-      </ScrollView>
-      <Menu styles={styles} />
-      <TouchableOpacity style={styles.centralButton} onPress={() => {
-        setEditMode(false);
-        setEditIdx(null);
-        setInitialData(null);
-        setModalVisible(true);
-      }}>
-        <Text style={styles.centralIcon}>➕</Text>
-      </TouchableOpacity>
-      <TransactionModal
-        visible={modalVisible}
-        onClose={handleCerrar}
-        onAccept={handleAceptar}
-        styles={{
-          ...styles,
-          customModal: {
-            ...styles.customModal,
-            position: 'absolute',
-            top: height * 0.12,
-            left: width * 0.05,
-            right: width * 0.05,
-            bottom: undefined,
-            minHeight: height * 0.7,
-            maxHeight: height * 0.85,
-            width: width * 0.9,
-            alignSelf: 'center',
-            justifyContent: 'center',
-            alignItems: 'center',
-            paddingVertical: height * 0.05,
-            paddingHorizontal: width * 0.05,
-            zIndex: 9999,
-          },
-        }}
-        isDarkMode={isDarkMode}
-        initialData={editMode && initialData ? initialData : undefined}
-        editMode={editMode}
-      />
-    </View>
-  );
+    );
 }
 
 const styles = StyleSheet.create({
-  input: {
-    backgroundColor: '#222B3A',
-    color: '#fff',
-    borderRadius: 10,
-    paddingVertical: height * 0.012,
-    paddingHorizontal: width * 0.04,
-    fontSize: width * 0.045,
-    marginBottom: height * 0.015,
-    borderWidth: 1,
-    borderColor: '#0FFFFF',
-    width: '100%',
-    minHeight: 40,
-    justifyContent: 'center',
-  },
-  modalLabel: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: width * 0.045,
-    marginBottom: 2,
-    marginTop: height * 0.01,
-    alignSelf: 'flex-start',
-  },
-  dropdownMenu: {},
-  dropdownMenuRelative: {},
-  dropdownMenuAbsolute: {
-    backgroundColor: '#222B3A',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#0FFFFF',
-    width: '100%',
-    zIndex: 999,
-    position: 'absolute',
-    top: '100%',
-    left: 0,
-    elevation: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-  },
-  dropdownItem: {
-    paddingVertical: height * 0.012,
-    paddingHorizontal: width * 0.04,
-  },
-  dropdownText: {
-    color: '#fff',
-    fontSize: width * 0.045,
-  },
-  tipoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginVertical: height * 0.015,
-  },
-  tipoButton: {
-    flex: 1,
-    paddingVertical: height * 0.014,
-    marginHorizontal: width * 0.01,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  tipoIngreso: { backgroundColor: '#27ae60' },
-  tipoGasto: { backgroundColor: '#e74c3c' },
-  tipoUnselected: { backgroundColor: '#222B3A', borderWidth: 1, borderColor: '#aaa' },
-  tipoButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: width * 0.045,
-  },
-  modalButtonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginTop: height * 0.02,
-  },
-  modalAcceptButton: {
-    backgroundColor: '#0FFFFF',
-    borderRadius: 16,
-    paddingVertical: height * 0.012,
-    paddingHorizontal: width * 0.08,
-    alignItems: 'center',
-    marginLeft: width * 0.04,
-  },
-  modalAcceptText: {
-    color: '#141F52',
-    fontWeight: 'bold',
-    fontSize: width * 0.045,
-  },
-  modalOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 100,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  absoluteFill: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  customModal: {
-    position: 'absolute',
-    backgroundColor: '#1A2A3AEE',
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: width * 0.06,
-    zIndex: 101,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 10,
-  },
-  modalTitle: {
-    fontSize: width * 0.06,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: height * 0.02,
-    textAlign: 'center',
-  },
-  modalText: {
-    fontSize: width * 0.045,
-    color: '#fff',
-    marginBottom: height * 0.03,
-    textAlign: 'center',
-  },
-  modalCloseButton: {
-    backgroundColor: '#0FFFFF',
-    borderRadius: 16,
-    paddingVertical: height * 0.012,
-    paddingHorizontal: width * 0.08,
-    alignItems: 'center',
-  },
-  modalCloseText: {
-    color: '#141F52',
-    fontWeight: 'bold',
-    fontSize: width * 0.045,
-  },
-  scrollView: {
-    marginTop: height * 0.14,
-  },
-  scrollContainer: {
-    paddingBottom: height * 0.1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#022B3A',
-  },
-  card: {
-    backgroundColor: '#141F52',
-    borderRadius: 16,
-    padding: width * 0.08,
-    color: '#FFFFFF',
-    width: width * 0.9,
-  },
-  titulo: {
-    fontSize: width * 0.06,
-    fontWeight: 'bold',
-    marginBottom: height * 0.02,
-    color: '#FFFFFF',
-  },
-  label: {
-    fontSize: width * 0.04,
-    color: '#FFFFFF',
-    marginTop: height * 0.01,
-  },
-  saldo: {
-    fontSize: width * 0.07,
-    fontWeight: 'bold',
-    color: '#27ae60',
-    marginBottom: height * 0.01,
-  },
-  gastos: {
-    fontSize: width * 0.06,
-    fontWeight: 'bold',
-    color: '#e74c3c',
-  },
-  menuContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#141F52',
-    paddingVertical: height * 0.02,
-    position: 'absolute',
-    bottom: 0,
-    width: '100%',
-    alignSelf: 'center',
-  },
-  menuGroup: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: width * 0.3,
-  },
-  menuButton: {
-    padding: width * 0.02,
-  },
-  historyButton: {
-    padding: width * 0.02,
-  },
-  menuIcon: {
-    color: '#FFFFFF',
-    fontSize: width * 0.05,
-  },
-  historyIcon: {
-    fontSize: width * 0.05,
-  },
-  centralButton: {
-    padding: width * 0.06,
-    borderRadius: width * 0.15,
-    backgroundColor: '#0FFFFF',
-    position: 'absolute',
-    bottom: height * 0.03,
-    alignSelf: 'center',
-  },
-  centralIcon: {
-    color: '#FFFFFF',
-    fontSize: width * 0.09,
-  },
-  topMenuContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#141F52',
-    padding: height * 0.02,
-    position: 'absolute',
-    top: 0,
-    width: '100%',
-  },
-  rightMenuGroup: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: width * 0.3,
-  },
-  welcomeMessage: {
-    fontSize: width * 0.08,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    marginVertical: height * 0.02,
-  },
-  welcomeContainer: {
-    marginTop: height * 0.01,
-    marginBottom: height * 0.04,
-    alignItems: 'center',
-  },
-  welcomeText: {
-    fontSize: width * 0.07,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  welcomeHeader: {
-    fontSize: width * 0.08,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    marginVertical: height * 0.03,
-  },
-  goalRowContainer: {
-    marginVertical: height * 0.01,
-  },
-  goalRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: height * 0.02,
-  },
-  goalIcon: {
-    fontSize: width * 0.08,
-    marginRight: width * 0.01,
-  },
-  goalText: {
-    fontSize: width * 0.05,
-    color: '#FFFFFF',
-    flex: 1,
-    textAlign: 'center',
-    flexShrink: 1,
-  },
-  goalProgressBarBackground: {
-    width: '57%',
-    height: height * 0.008,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 4,
-    marginLeft: width * 0.01,
-  },
-  goalProgressBar: {
-    height: '100%',
-    backgroundColor: '#27ae60',
-    borderRadius: 4,
-  },
-  goalProgressValue: {
-    fontSize: width * 0.04,
-    color: '#FFFFFF',
-    textAlign: 'center',
-    marginBottom: height * 0.005,
-    position: 'absolute',
-    top: -height * 0.001,
-    left: '65%',
-    transform: [{ translateX: -width * 0.1 }],
-  },
-  welcomeMessageContainer: {
-    marginTop: height * 0.04,
-  },
+    safeAreaBg: {
+        flex: 1,
+        backgroundColor: 'rgba(10,42,54,0.85)', // fallback overlay
+    },
+    topMenu: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        backgroundColor: 'rgba(26,35,77,0.95)',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderBottomWidth: 2,
+        borderBottomColor: '#232c5c',
+        zIndex: 10,
+    },
+    topIconBtn: {
+        marginLeft: 18,
+    },
+    topIcon: {
+        width: 28,
+        height: 28,
+        tintColor: '#fff',
+    },
+    content: {
+        flex: 1,
+        alignItems: 'center',
+        width: '100%',
+    },
+    bienvenida: {
+        color: '#fff',
+        fontSize: 24,
+        marginBottom: 24,
+        marginTop: 16,
+        letterSpacing: 1,
+        textAlign: 'center',
+    },
+    cardDatos: {
+        backgroundColor: 'rgba(26,35,77,0.95)',
+        borderRadius: 12,
+        padding: 18,
+        marginBottom: 32,
+        width: '90%',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: '#232c5c',
+    },
+    tituloCard: {
+        color: '#fff',
+        fontSize: 20,
+        marginBottom: 12,
+        textAlign: 'center',
+    },
+    filaDatos: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: '#232c5c',
+        borderRadius: 4,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        marginBottom: 12,
+        width: '95%',
+    },
+    labelDatos: {
+        color: '#fff',
+        fontSize: 16,
+        flex: 1,
+    },
+    saldoDatos: {
+        color: '#00b894',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    gastosDatos: {
+        color: '#e74c3c',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    cardMetas: {
+        backgroundColor: 'rgba(26,35,77,0.95)',
+        borderRadius: 12,
+        padding: 18,
+        width: '90%',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: '#232c5c',
+    },
+    metaBox: {
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        borderColor: '#232c5c',
+        borderRadius: 4,
+        height: 40,
+        width: '95%',
+        marginVertical: 10,
+    },
+    bottomMenu: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: 'rgba(26,35,77,0.95)',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderTopWidth: 2,
+        borderTopColor: '#232c5c',
+        zIndex: 10,
+    },
+    bottomIconBtn: {
+        flex: 1,
+        alignItems: 'center',
+    },
+    bottomIcon: {
+        width: 32,
+        height: 32,
+        tintColor: '#fff',
+    },
+    centerBtn: {
+        backgroundColor: '#fff',
+        borderRadius: 32,
+        width: 56,
+        height: 56,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: -24,
+        marginHorizontal: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 6,
+    },
+    centerIcon: {
+        width: 36,
+        height: 36,
+        tintColor: '#1a234d',
+    },
 });

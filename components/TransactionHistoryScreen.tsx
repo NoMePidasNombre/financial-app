@@ -23,14 +23,13 @@ interface Props {
 const ICONO_BILLETE = '💵';
 
 export default function TransactionHistoryScreen({ transactions, onClose, onEdit, onDelete }: Props) {
+  // Estado local para modal de edición
   const [modalVisible, setModalVisible] = React.useState(false);
   const [editIdx, setEditIdx] = React.useState<number | null>(null);
   const [initialData, setInitialData] = React.useState<any>(null);
   const [editMode, setEditMode] = React.useState(false);
 
-
-  // Manejar abrir modal de edición
-  // Editar usando el modal local de edición
+  // Abrir modal de edición localmente
   const handleEdit = (idx: number, data: any) => {
     setEditIdx(idx);
     setInitialData(data);
@@ -38,14 +37,12 @@ export default function TransactionHistoryScreen({ transactions, onClose, onEdit
     setModalVisible(true);
   };
 
-  // Manejar aceptar edición (actualiza localmente y notifica a MainApp)
   // Guardar edición y notificar a MainApp
   const handleAceptar = (monto: number, categoria: string, medio: string, tipo: 'ingreso' | 'gasto') => {
     if (editMode && editIdx != null && initialData) {
-      const now = new Date();
-      const fecha = now.toLocaleDateString('es-AR');
-      const hora = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
-      onEdit(editIdx, { tipo, categoria, medio, monto, fecha, hora });
+      if (typeof onEdit === 'function') {
+        onEdit(editIdx, { tipo, categoria, medio, monto, fecha: initialData.fecha, hora: initialData.hora });
+      }
     }
     setModalVisible(false);
     setEditMode(false);
@@ -53,7 +50,7 @@ export default function TransactionHistoryScreen({ transactions, onClose, onEdit
     setInitialData(null);
   };
 
-  // Manejar cerrar modal
+  // Cerrar modal
   const handleCerrar = () => {
     setModalVisible(false);
     setEditMode(false);
@@ -111,43 +108,14 @@ export default function TransactionHistoryScreen({ transactions, onClose, onEdit
           );
         })}
       </ScrollView>
+      {/* Modal de edición local */}
       {modalVisible && (
         <TransactionEditModal
           key={editIdx !== null ? `edit-${editIdx}` : 'edit-modal'}
           visible={modalVisible}
-          onClose={() => {
-            setModalVisible(false);
-            setEditMode(false);
-            setEditIdx(null);
-            setInitialData(null);
-          }}
+          onClose={handleCerrar}
           onAccept={handleAceptar}
-          styles={{
-            ...styles,
-            customModal: {
-              ...styles.customModal,
-              position: 'absolute',
-              top: height * 0.12,
-              left: width * 0.05,
-              right: width * 0.05,
-              minHeight: height * 0.7,
-              maxHeight: height * 0.85,
-              width: width * 0.9,
-              alignSelf: 'center',
-              justifyContent: 'center',
-              alignItems: 'center',
-              paddingVertical: height * 0.05,
-              paddingHorizontal: width * 0.05,
-              zIndex: 9999,
-              backgroundColor: '#1A2A3AEE',
-              borderRadius: 24,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 10,
-            },
-          }}
+          styles={styles}
           isDarkMode={false}
           initialData={editMode && initialData ? initialData : undefined}
           editMode={editMode}
