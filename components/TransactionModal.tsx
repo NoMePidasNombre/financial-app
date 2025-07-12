@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Platform } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Platform, Animated, Easing } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { parseDecimalInput, isValidDecimalInput } from './utils';
 
@@ -9,12 +9,20 @@ interface Props {
   onAccept: (monto: number, categoria: string, medio: string, tipo: 'ingreso' | 'gasto') => void;
   styles: any;
   isDarkMode: boolean;
+  initialData?: {
+    monto: number;
+    categoria: string;
+    medio: string;
+    tipo: 'ingreso' | 'gasto';
+  };
+  editMode?: boolean;
 }
+
 
 const categorias = ['Sueldo', 'Comida', 'Supermercado', 'Alquiler'];
 const medios = ['Efectivo', 'Transferencia', 'Bancarizado'];
 
-export default function TransactionModal({ visible, onClose, onAccept, styles, isDarkMode }: Props) {
+export default function TransactionModal({ visible, onClose, onAccept, styles, isDarkMode, initialData, editMode }: Props) {
   const [monto, setMonto] = useState('');
   const [categoria, setCategoria] = useState('');
   const [medio, setMedio] = useState('');
@@ -22,7 +30,75 @@ export default function TransactionModal({ visible, onClose, onAccept, styles, i
   const [categoriaMenu, setCategoriaMenu] = useState(false);
   const [medioMenu, setMedioMenu] = useState(false);
 
-  if (!visible) return null;
+  // Animación desde el botón central
+  const scaleAnim = useRef(new Animated.Value(0.2)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const translateYAnim = useRef(new Animated.Value(180)).current; // Empieza más abajo
+  const [show, setShow] = useState(visible);
+
+  useEffect(() => {
+    if (visible) {
+      setShow(true);
+      Animated.parallel([
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 350,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.exp),
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 220,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateYAnim, {
+          toValue: 0,
+          duration: 350,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.exp),
+        }),
+      ]).start();
+    } else if (show) {
+      Animated.parallel([
+        Animated.timing(scaleAnim, {
+          toValue: 0.2,
+          duration: 220,
+          useNativeDriver: true,
+          easing: Easing.in(Easing.exp),
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 0,
+          duration: 180,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateYAnim, {
+          toValue: 180,
+          duration: 220,
+          useNativeDriver: true,
+          easing: Easing.in(Easing.exp),
+        }),
+      ]).start(() => setShow(false));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
+
+  // Cargar datos iniciales si es edición
+  React.useEffect(() => {
+    if (editMode && initialData) {
+      setMonto(initialData.monto.toString().replace('.', ','));
+      setCategoria(initialData.categoria);
+      setMedio(initialData.medio);
+      setTipo(initialData.tipo);
+    } else if (visible && !editMode) {
+      setMonto('');
+      setCategoria('');
+      setMedio('');
+      setTipo('ingreso');
+    }
+  }, [editMode, initialData, visible]);
+
+  if (!show) return null;
+
 
   const montoValido = !!monto && isValidDecimalInput(monto) && parseDecimalInput(monto) > 0;
   const categoriaValida = !!categoria;
@@ -50,6 +126,14 @@ export default function TransactionModal({ visible, onClose, onAccept, styles, i
     onClose();
   };
 
+
+  // Colores según tipo
+  const bgColor = tipo === 'ingreso' ? '#00b89422' : '#e74c3c22';
+  const titleColor = tipo === 'ingreso' ? '#00b894' : '#e74c3c';
+  const ingresoBtnColor = tipo === 'ingreso' ? '#00b894' : '#232c5c';
+  const gastoBtnColor = tipo === 'gasto' ? '#e74c3c' : '#232c5c';
+  const guardarBtnColor = tipo === 'ingreso' ? '#009e6d' : '#c0392b';
+
   return (
     <View style={styles.modalOverlay}>
       <BlurView
@@ -57,8 +141,20 @@ export default function TransactionModal({ visible, onClose, onAccept, styles, i
         intensity={70}
         tint={isDarkMode ? 'dark' : 'light'}
       />
-      <View style={styles.customModal}>
-        <Text style={styles.modalTitle}>Cargar Nueva Transacción</Text>
+      <Animated.View
+        style={[
+          styles.customModal,
+          {
+            backgroundColor: bgColor,
+            transform: [
+              { scale: scaleAnim },
+              { translateY: translateYAnim },
+            ],
+            opacity: opacityAnim,
+          },
+        ]}
+      >
+        <Text style={[styles.modalTitle, { color: titleColor }]}>Cargar Nueva Transacción</Text>
         {/* Monto */}
         <Text style={styles.modalLabel}>Monto</Text>
         <TextInput
@@ -110,32 +206,47 @@ export default function TransactionModal({ visible, onClose, onAccept, styles, i
         {/* Tipo: Ingreso/Gasto */}
         <View style={styles.tipoRow}>
           <TouchableOpacity
-            style={[styles.tipoButton, tipo === 'ingreso' ? styles.tipoIngreso : styles.tipoUnselected]}
+            style={[styles.tipoButton, { backgroundColor: ingresoBtnColor }]}
             onPress={() => setTipo('ingreso')}
           >
-            <Text style={styles.tipoButtonText}>Ingreso</Text>
+            <Text style={[styles.tipoButtonText, { color: '#fff' }]}>Ingreso</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tipoButton, tipo === 'gasto' ? styles.tipoGasto : styles.tipoUnselected]}
+            style={[styles.tipoButton, { backgroundColor: gastoBtnColor }]}
             onPress={() => setTipo('gasto')}
           >
-            <Text style={styles.tipoButtonText}>Gasto</Text>
+            <Text style={[styles.tipoButtonText, { color: '#fff' }]}>Gasto</Text>
           </TouchableOpacity>
         </View>
         {/* Botones Cerrar y Aceptar */}
-        <View style={styles.modalButtonRow}>
-          <TouchableOpacity style={styles.modalCloseButton} onPress={handleCerrar}>
-            <Text style={styles.modalCloseText}>Cerrar</Text>
+        <View style={[styles.modalButtonRow, { justifyContent: 'center' }]}> 
+          <TouchableOpacity
+            style={[
+              styles.modalCloseButton,
+              {
+                backgroundColor: 'transparent',
+                borderWidth: 1.5,
+                borderColor: '#aaa',
+                marginRight: 16,
+              },
+            ]}
+            onPress={handleCerrar}
+          >
+            <Text style={[styles.modalCloseText, { color: '#aaa' }]}>Cancelar</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.modalAcceptButton, !puedeAceptar && { opacity: 0.5 }]}
+            style={[
+              styles.modalAcceptButton,
+              { backgroundColor: guardarBtnColor },
+              !puedeAceptar && { opacity: 0.5 },
+            ]}
             onPress={handleAceptar}
             disabled={!puedeAceptar}
           >
-            <Text style={styles.modalAcceptText}>Aceptar</Text>
+            <Text style={[styles.modalAcceptText, { color: '#fff' }]}>Guardar</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </Animated.View>
     </View>
   );
 }
