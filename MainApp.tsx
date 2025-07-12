@@ -5,6 +5,7 @@ import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { View, Platform } from 'react-native';
 import AppContent from './AppContent';
+import GoalsScreen from './components/GoalsScreen';
 import TransactionHistoryScreen from './components/TransactionHistoryScreen';
 import IngresoModal from './components/IngresoModal';
 import GastoModal from './components/GastoModal';
@@ -14,6 +15,7 @@ import TransactionEditModal from './components/TransactionEditModal';
 const Stack = createStackNavigator();
 
 export default function MainApp() {
+  const [goals, setGoals] = React.useState([]);
   const [transactions, setTransactions] = React.useState([]);
   const [editIndex, setEditIndex] = React.useState<number | null>(null);
   const [editData, setEditData] = React.useState(null);
@@ -113,7 +115,6 @@ export default function MainApp() {
     <SafeAreaProvider>
       <NavigationContainer ref={navigationRef}>
         <Stack.Navigator
-          id={undefined}
           initialRouteName="Home"
           screenOptions={{
             headerShown: false,
@@ -124,91 +125,21 @@ export default function MainApp() {
           <Stack.Screen
             name="Home"
             children={(props) => (
-              <>
-                <AppContent
-                  {...props}
-                  saldo={saldo}
-                  gastos={gastos}
-                  onAddPress={handleAddPress}
-                  onHistoryPress={handleHistoryPress}
-                />
-                {/* Modal de selección de tipo */}
-                <TipoTransaccionModal
-                  visible={showTipoModal}
-                  onSelect={handleTipoSelect}
-                  onClose={() => setShowTipoModal(false)}
-                />
-                {/* Modal de transacción */}
-                {showTransactionModal && (
-                  <SafeAreaView style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    zIndex: 9999,
-                  }}>
-                    {selectedTipo === 'ingreso' ? (
-                      <IngresoModal
-                        visible={showTransactionModal}
-                        onClose={handleCloseTransactionModal}
-                        onAccept={(monto, categoria, medio) => {
-                          const now = new Date();
-                          const fecha = now.toLocaleDateString('es-AR');
-                          const hora = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
-                          setTransactions([
-                            ...transactions,
-                            { monto, categoria, medio, tipo: 'ingreso', fecha, hora },
-                          ]);
-                          setShowTransactionModal(false);
-                          setSelectedTipo('ingreso');
-                        }}
-                      />
-                    ) : (
-                      <GastoModal
-                        visible={showTransactionModal}
-                        onClose={handleCloseTransactionModal}
-                        onAccept={(monto, categoria, medio) => {
-                          const now = new Date();
-                          const fecha = now.toLocaleDateString('es-AR');
-                          const hora = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
-                          setTransactions([
-                            ...transactions,
-                            { monto, categoria, medio, tipo: 'gasto', fecha, hora },
-                          ]);
-                          setShowTransactionModal(false);
-                          setSelectedTipo('ingreso');
-                        }}
-                      />
-                    )}
-                  </SafeAreaView>
-                )}
-                {/* Modal de edición de transacción */}
-                {showEditModal && (
-                  <SafeAreaView style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    zIndex: 9999,
-                  }}>
-                    <TransactionEditModal
-                      visible={showEditModal}
-                      onClose={() => { setShowEditModal(false); setEditIndex(null); setEditData(null); }}
-                      onAccept={handleAcceptEdit}
-                      styles={{}}
-                      isDarkMode={false}
-                      initialData={editData}
-                      editMode={true}
-                    />
-                  </SafeAreaView>
-                )}
-              </>
+              <AppContent
+                {...props}
+                saldo={saldo}
+                gastos={gastos}
+                onAddPress={handleAddPress}
+                onHistoryPress={handleHistoryPress}
+                goals={goals}
+                onGoalsPress={() => navigationRef.current?.navigate('Goals')}
+              />
+            )}
+          />
+          <Stack.Screen
+            name="Goals"
+            children={(props) => (
+              <GoalsScreen goals={goals} setGoals={setGoals} navigation={props.navigation} />
             )}
           />
           <Stack.Screen
@@ -224,6 +155,80 @@ export default function MainApp() {
             )}
           />
         </Stack.Navigator>
+        {/* Modals globales */}
+        <TipoTransaccionModal
+          visible={showTipoModal}
+          onSelect={handleTipoSelect}
+          onClose={() => setShowTipoModal(false)}
+        />
+        {showTransactionModal && (
+          <SafeAreaView style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 9999,
+          }}>
+            {selectedTipo === 'ingreso' ? (
+              <IngresoModal
+                visible={showTransactionModal}
+                onClose={handleCloseTransactionModal}
+                onAccept={(monto, categoria, medio) => {
+                  const now = new Date();
+                  const fecha = now.toLocaleDateString('es-AR');
+                  const hora = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+                  setTransactions([
+                    ...transactions,
+                    { monto, categoria, medio, tipo: 'ingreso', fecha, hora },
+                  ]);
+                  setShowTransactionModal(false);
+                  setSelectedTipo('ingreso');
+                }}
+              />
+            ) : (
+              <GastoModal
+                visible={showTransactionModal}
+                onClose={handleCloseTransactionModal}
+                onAccept={(monto, categoria, medio) => {
+                  const now = new Date();
+                  const fecha = now.toLocaleDateString('es-AR');
+                  const hora = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+                  setTransactions([
+                    ...transactions,
+                    { monto, categoria, medio, tipo: 'gasto', fecha, hora },
+                  ]);
+                  setShowTransactionModal(false);
+                  setSelectedTipo('ingreso');
+                }}
+              />
+            )}
+          </SafeAreaView>
+        )}
+        {showEditModal && (
+          <SafeAreaView style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 9999,
+          }}>
+            <TransactionEditModal
+              visible={showEditModal}
+              onClose={() => { setShowEditModal(false); setEditIndex(null); setEditData(null); }}
+              onAccept={handleAcceptEdit}
+              styles={{}}
+              isDarkMode={false}
+              initialData={editData}
+              editMode={true}
+            />
+          </SafeAreaView>
+        )}
       </NavigationContainer>
     </SafeAreaProvider>
   );
