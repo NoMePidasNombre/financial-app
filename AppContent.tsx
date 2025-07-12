@@ -1,105 +1,150 @@
-import React, { useState } from 'react';
-import { StatusBar, StyleSheet, useColorScheme, View, Text, Image, TouchableOpacity, Modal } from 'react-native';
+import React from 'react';
+import { StatusBar, StyleSheet, useColorScheme, View, Text, Image, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export default function AppContent({ saldo, gastos, usuario = 'USER123', onAddPress, onHistoryPress }) {
+const ICONS = {
+    settings: require('./assets/icons/settings.png'), // engranaje
+    notifications: require('./assets/icons/notifications.png'), // campana
+    history: require('./assets/icons/history.png'), // reloj
+    profile: require('./assets/icons/profile.png'), // usuario
+    home: require('./assets/icons/home.png'), // home
+    goals: require('./assets/icons/goals.png'), // trofeo
+    plus: require('./assets/icons/plus.png'), // más (centro)
+    stats: require('./assets/icons/graphs.png'), // estadisticas
+    list: require('./assets/icons/calculate.png'), // lista
+};
+const BG = require('./assets/icons/brain-outline.png');
+
+export default function AppContent({ saldo, gastos, usuario = 'USER123', onAddPress, onHistoryPress, goals = [], onGoalsPress }) {
     const isDarkMode = useColorScheme() === 'dark';
     const insets = useSafeAreaInsets();
-    const [modalVisible, setModalVisible] = useState(false);
+    const { width, height } = Dimensions.get('window');
 
     const topIcons = [
-        require('./assets/icons/image 5.png'), // engranaje
-        require('./assets/icons/image 9.png'), // campana
-        require('./assets/icons/image 3.png'), // reloj
-        require('./assets/icons/image 8.png'), // usuario
+        { icon: ICONS.settings, key: 'settings' },
+        { icon: ICONS.notifications, key: 'notifications' },
+        { icon: ICONS.history, key: 'history' },
+        { icon: ICONS.profile, key: 'profile' },
     ];
     const bottomIcons = [
-        require('./assets/icons/image 2.png'), // home
-        require('./assets/icons/image 6.png'), // trofeo
-        require('./assets/icons/image 4.png'), // más (centro)
-        require('./assets/icons/image 10.png'), // estadisticas
-        require('./assets/icons/contando 1.png'), // lista
+        { icon: ICONS.home, key: 'home' },
+        { icon: ICONS.goals, key: 'goals' },
+        { icon: ICONS.plus, key: 'plus' },
+        { icon: ICONS.stats, key: 'stats' },
+        { icon: ICONS.list, key: 'list' },
     ];
 
-    const handleCenterBtn = () => setModalVisible(true);
-    const handleSelect = (type) => {
-        setModalVisible(false);
-        onAddPress(type);
+    function handleTopMenuPress(idx) {
+        if (idx === 2) {
+            if (onHistoryPress) {
+                onHistoryPress();
+            } else {
+                Alert.alert('Handler no asignado', 'No se pasó onHistoryPress al componente.');
+            }
+        }
+    }
+    function handleBottomMenuPress(idx) {
+        if (idx === 1) {
+            if (onGoalsPress) {
+                onGoalsPress();
+            }
+        } else if (idx === 2) {
+            if (onAddPress) {
+                onAddPress();
+            } else {
+                Alert.alert('Handler no asignado', 'No se pasó onAddPress al componente.');
+            }
+        }
+    }
+
+    // Estilos dependientes de dimensiones
+    const bgWatermarkStyle = {
+        position: "absolute" as const,
+        opacity: 0.08,
+        zIndex: 0,
+        width: width * 0.7,
+        height: width * 0.7,
+        top: height * 0.18,
+        left: width * 0.15,
     };
 
     return (
-        <SafeAreaView style={styles.safeAreaBg}>
-            {/* Menú superior fijo */}
-            <View style={[styles.topMenu, { paddingTop: insets.top }]}>
-                <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-                {topIcons.map((icon, idx) => (
-                    <TouchableOpacity key={idx} style={styles.topIconBtn} onPress={idx === 2 ? onHistoryPress : undefined}>
-                        <Image source={icon} style={styles.topIcon} resizeMode="contain" />
+        <View style={{ flex: 1, backgroundColor: '#0a2a36' }}>
+            {/* Marca de agua */}
+            <Image source={BG} style={bgWatermarkStyle} resizeMode="contain" />
+            <SafeAreaView style={styles.safeAreaBg}>
+                {/* Menú superior fijo */}
+                <View style={[styles.topMenu, { paddingTop: insets.top }]}>
+                    <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+                    {/* Engranaje a la izquierda */}
+                    <TouchableOpacity key={topIcons[0].key} style={styles.topIconBtn} onPress={() => handleTopMenuPress(0)}>
+                        <Image source={topIcons[0].icon} style={styles.topIcon} resizeMode="contain" />
                     </TouchableOpacity>
-                ))}
-            </View>
-            {/* Contenido principal */}
-            <View style={[styles.content, { paddingTop: 70 + insets.top, paddingBottom: 80 + insets.bottom }]}>
-                <Text style={styles.bienvenida}>BIENVENIDO {usuario}</Text>
-                <View style={styles.cardDatos}>
-                    <Text style={styles.tituloCard}>Datos Mensuales</Text>
-                    <View style={styles.filaDatos}>
-                        <Text style={styles.labelDatos}>Dinero disponible</Text>
-                        <Text style={styles.saldoDatos}>${saldo?.toLocaleString('es-AR', { minimumFractionDigits: 3 })}</Text>
-                    </View>
-                    <View style={styles.filaDatos}>
-                        <Text style={styles.labelDatos}>Gastos</Text>
-                        <Text style={styles.gastosDatos}>${gastos?.toLocaleString('es-AR', { minimumFractionDigits: 3 })}</Text>
-                    </View>
+                    <View style={{ flex: 1 }} />
+                    {/* Otros iconos a la derecha */}
+                    {topIcons.slice(1).map((item, idx) => (
+                        <TouchableOpacity key={item.key} style={styles.topIconBtn} onPress={() => handleTopMenuPress(idx + 1)}>
+                            <Image source={item.icon} style={styles.topIcon} resizeMode="contain" />
+                        </TouchableOpacity>
+                    ))}
                 </View>
-                <View style={styles.cardMetas}>
-                    <Text style={styles.tituloCard}>METAS</Text>
-                    <View style={styles.metaBox} />
-                    <View style={styles.metaBox} />
-                </View>
-            </View>
-            {/* Menú inferior fijo */}
-            <View style={[styles.bottomMenu, { paddingBottom: insets.bottom }]}>
-                {bottomIcons.map((icon, idx) => (
-                    <TouchableOpacity
-                        key={idx}
-                        style={idx === 2 ? styles.centerBtn : styles.bottomIconBtn}
-                        onPress={idx === 2 ? handleCenterBtn : undefined}
-                    >
-                        <Image source={icon} style={idx === 2 ? styles.centerIcon : styles.bottomIcon} resizeMode="contain" />
-                    </TouchableOpacity>
-                ))}
-            </View>
-            {/* Modal para elegir tipo de transacción */}
-            <Modal
-                visible={modalVisible}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalBox}>
-                        <Text style={styles.modalTitle}>¿Qué deseas registrar?</Text>
-                        <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#e74c3c' }]} onPress={() => handleSelect('remove')}>
-                            <Text style={styles.modalBtnText}>Gasto</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#00b894' }]} onPress={() => handleSelect('add')}>
-                            <Text style={styles.modalBtnText}>Ingreso</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.modalCancel} onPress={() => setModalVisible(false)}>
-                            <Text style={styles.modalCancelText}>Cancelar</Text>
-                        </TouchableOpacity>
+                {/* Contenido principal */}
+                <View style={[styles.content, { paddingTop: 70 + insets.top, paddingBottom: 80 + insets.bottom }]}>
+                    <Text style={styles.bienvenida}>BIENVENIDO {usuario}</Text>
+                    <View style={styles.cardDatos}>
+                        <Text style={styles.tituloCard}>Datos Mensuales</Text>
+                        <View style={styles.filaDatos}>
+                            <Text style={styles.labelDatos}>Dinero disponible</Text>
+                            <Text style={styles.saldoDatos}>${saldo?.toLocaleString('es-AR', { minimumFractionDigits: 3 })}</Text>
+                        </View>
+                        <View style={styles.filaDatos}>
+                            <Text style={styles.labelDatos}>Gastos</Text>
+                            <Text style={styles.gastosDatos}>${gastos?.toLocaleString('es-AR', { minimumFractionDigits: 3 })}</Text>
+                        </View>
+                    </View>
+                    <View style={styles.cardMetas}>
+                        <Text style={styles.tituloCard}>METAS</Text>
+                        {goals.slice(-3).reverse().map((goal, idx) => {
+                            const progress = Math.min(goal.currentAmount / goal.targetAmount, 1);
+                            return (
+                                <View key={goal.id} style={styles.metaBoxFilled}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                                        <Text style={styles.metaEmoji}>{goal.emoji}</Text>
+                                        <Text style={styles.metaNombre}>{goal.name}</Text>
+                                        <Text style={styles.metaDineroFalta}>${(goal.targetAmount - goal.currentAmount).toLocaleString('es-AR', { minimumFractionDigits: 0 })} faltan</Text>
+                                    </View>
+                                    <View style={styles.metaBarBg}>
+                                        <View style={[styles.metaBar, { width: `${progress * 100}%` }]} />
+                                    </View>
+                                </View>
+                            );
+                        })}
+                        {goals.length === 0 && (
+                            <Text style={{ color: '#fff', textAlign: 'center', marginTop: 8 }}>No tienes metas creadas.</Text>
+                        )}
                     </View>
                 </View>
-            </Modal>
-        </SafeAreaView>
+                {/* Menú inferior fijo */}
+                <View style={[styles.bottomMenu, { paddingBottom: insets.bottom }]}>
+                    {bottomIcons.map((item, idx) => (
+                        <TouchableOpacity
+                            key={item.key}
+                            style={idx === 2 ? styles.centerBtn : styles.bottomIconBtn}
+                            onPress={() => handleBottomMenuPress(idx)}
+                        >
+                            <Image source={item.icon} style={idx === 2 ? styles.centerIcon : styles.bottomIcon} resizeMode="contain" />
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            </SafeAreaView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     safeAreaBg: {
         flex: 1,
-        backgroundColor: '#0a2a36',
+        backgroundColor: 'rgba(10,42,54,0.85)', // fallback overlay
     },
     topMenu: {
         position: 'absolute',
@@ -109,24 +154,16 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'flex-end',
         alignItems: 'center',
-        backgroundColor: '#1a234d',
+        backgroundColor: 'rgba(26,35,77,0.95)',
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderBottomWidth: 2,
         borderBottomColor: '#232c5c',
-        zIndex: 10,
-    },
-    topIconBtn: {
-        marginLeft: 18,
-    },
-    topIcon: {
-        width: 28,
-        height: 28,
-        tintColor: '#fff',
     },
     content: {
         flex: 1,
         alignItems: 'center',
+        width: '100%',
     },
     bienvenida: {
         color: '#fff',
@@ -137,7 +174,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     cardDatos: {
-        backgroundColor: '#1a234d',
+        backgroundColor: 'rgba(26,35,77,0.95)',
         borderRadius: 12,
         padding: 18,
         marginBottom: 32,
@@ -178,23 +215,76 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
     },
+    topIconBtn: {
+        marginLeft: 18,
+    },
+    topIcon: {
+        width: 28,
+        height: 28,
+        tintColor: '#fff',
+    },
     cardMetas: {
-        backgroundColor: '#1a234d',
-        borderRadius: 12,
-        padding: 18,
-        width: '90%',
+        backgroundColor: 'rgba(26,35,77,0.98)',
+        borderRadius: 18,
+        padding: 22,
+        width: '92%',
         alignItems: 'center',
         borderWidth: 2,
         borderColor: '#232c5c',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+        elevation: 4,
+        marginBottom: 24,
     },
-    metaBox: {
-        backgroundColor: 'transparent',
-        borderWidth: 2,
-        borderColor: '#232c5c',
-        borderRadius: 4,
-        height: 40,
-        width: '95%',
-        marginVertical: 10,
+    metaBoxFilled: {
+        backgroundColor: 'rgba(35,44,92,0.92)',
+        borderWidth: 1.5,
+        borderColor: '#2e3a5c',
+        borderRadius: 10,
+        width: '98%',
+        marginVertical: 8,
+        paddingVertical: 10,
+        paddingHorizontal: 14,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.10,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    metaEmoji: {
+        fontSize: 26,
+        marginRight: 10,
+        marginLeft: 2,
+    },
+    metaNombre: {
+        color: '#fff',
+        fontSize: 17,
+        fontWeight: '600',
+        flex: 1,
+        letterSpacing: 0.2,
+    },
+    metaDineroFalta: {
+        color: '#00e6a0',
+        fontSize: 15,
+        marginLeft: 10,
+        fontWeight: '500',
+    },
+    metaBarBg: {
+        backgroundColor: '#232c5c',
+        borderRadius: 6,
+        height: 10,
+        width: '100%',
+        marginTop: 6,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: '#1a234d',
+    },
+    metaBar: {
+        backgroundColor: '#00e6a0',
+        height: 10,
+        borderRadius: 6,
     },
     bottomMenu: {
         position: 'absolute',
@@ -204,7 +294,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: '#1a234d',
+        backgroundColor: 'rgba(26,35,77,0.95)',
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderTopWidth: 2,
@@ -239,44 +329,5 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         tintColor: '#1a234d',
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.4)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    modalBox: {
-        backgroundColor: '#1a234d',
-        borderRadius: 16,
-        padding: 24,
-        alignItems: 'center',
-        width: 260,
-    },
-    modalTitle: {
-        color: '#fff',
-        fontSize: 20,
-        marginBottom: 18,
-        textAlign: 'center',
-    },
-    modalBtn: {
-        width: '100%',
-        padding: 14,
-        borderRadius: 8,
-        marginBottom: 12,
-        alignItems: 'center',
-    },
-    modalBtnText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    modalCancel: {
-        marginTop: 8,
-        alignItems: 'center',
-    },
-    modalCancelText: {
-        color: '#aaa',
-        fontSize: 16,
     },
 });
