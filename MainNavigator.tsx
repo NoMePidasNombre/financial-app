@@ -18,11 +18,19 @@ export default function MainNavigator() {
         setTransactions((prev) => [tx, ...prev]);
     };
 
+    // Funciones para editar y borrar transacciones
+    function handleDeleteTransaction(idx) {
+        setTransactions(prev => prev.filter((_, i) => i !== idx));
+    }
+    function handleEditTransaction(idx, newTx) {
+        setTransactions(prev => prev.map((tx, i) => i === idx ? newTx : tx));
+    }
+
     return (
         <NavigationContainer>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="Home">
-                    {props => <AppContent {...props} saldo={saldo} gastos={gastos} onAddPress={() => props.navigation.navigate('AddTransaction', { onAdd: handleAddTransaction })} onHistoryPress={() => props.navigation.navigate('History', { transactions })} />}
+                    {props => <AppContent {...props} saldo={saldo} gastos={gastos} onAddPress={(type) => props.navigation.navigate('AddTransaction', { onAdd: handleAddTransaction, type })} onHistoryPress={() => props.navigation.navigate('History', { transactions, onDelete: handleDeleteTransaction, onEdit: handleEditTransaction })} />}
                 </Stack.Screen>
                 <Stack.Screen name="AddTransaction">
                     {props => <AddTransactionScreen {...props} />}

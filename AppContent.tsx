@@ -1,10 +1,11 @@
-import React from 'react';
-import { StatusBar, StyleSheet, useColorScheme, View, Text, Image, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { StatusBar, StyleSheet, useColorScheme, View, Text, Image, TouchableOpacity, Modal } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AppContent({ saldo, gastos, usuario = 'USER123', onAddPress, onHistoryPress }) {
     const isDarkMode = useColorScheme() === 'dark';
     const insets = useSafeAreaInsets();
+    const [modalVisible, setModalVisible] = useState(false);
 
     const topIcons = [
         require('./assets/icons/image 5.png'), // engranaje
@@ -19,6 +20,12 @@ export default function AppContent({ saldo, gastos, usuario = 'USER123', onAddPr
         require('./assets/icons/image 10.png'), // estadisticas
         require('./assets/icons/contando 1.png'), // lista
     ];
+
+    const handleCenterBtn = () => setModalVisible(true);
+    const handleSelect = (type) => {
+        setModalVisible(false);
+        onAddPress(type);
+    };
 
     return (
         <SafeAreaView style={styles.safeAreaBg}>
@@ -54,17 +61,42 @@ export default function AppContent({ saldo, gastos, usuario = 'USER123', onAddPr
             {/* Menú inferior fijo */}
             <View style={[styles.bottomMenu, { paddingBottom: insets.bottom }]}>
                 {bottomIcons.map((icon, idx) => (
-                    <TouchableOpacity key={idx} style={idx === 2 ? styles.centerBtn : styles.bottomIconBtn} onPress={idx === 2 ? onAddPress : undefined}>
+                    <TouchableOpacity
+                        key={idx}
+                        style={idx === 2 ? styles.centerBtn : styles.bottomIconBtn}
+                        onPress={idx === 2 ? handleCenterBtn : undefined}
+                    >
                         <Image source={icon} style={idx === 2 ? styles.centerIcon : styles.bottomIcon} resizeMode="contain" />
                     </TouchableOpacity>
                 ))}
             </View>
+            {/* Modal para elegir tipo de transacción */}
+            <Modal
+                visible={modalVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalBox}>
+                        <Text style={styles.modalTitle}>¿Qué deseas registrar?</Text>
+                        <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#e74c3c' }]} onPress={() => handleSelect('remove')}>
+                            <Text style={styles.modalBtnText}>Gasto</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#00b894' }]} onPress={() => handleSelect('add')}>
+                            <Text style={styles.modalBtnText}>Ingreso</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.modalCancel} onPress={() => setModalVisible(false)}>
+                            <Text style={styles.modalCancelText}>Cancelar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    // ...existing code from your App.tsx styles...
     safeAreaBg: {
         flex: 1,
         backgroundColor: '#0a2a36',
@@ -207,5 +239,44 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         tintColor: '#1a234d',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalBox: {
+        backgroundColor: '#1a234d',
+        borderRadius: 16,
+        padding: 24,
+        alignItems: 'center',
+        width: 260,
+    },
+    modalTitle: {
+        color: '#fff',
+        fontSize: 20,
+        marginBottom: 18,
+        textAlign: 'center',
+    },
+    modalBtn: {
+        width: '100%',
+        padding: 14,
+        borderRadius: 8,
+        marginBottom: 12,
+        alignItems: 'center',
+    },
+    modalBtnText: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    modalCancel: {
+        marginTop: 8,
+        alignItems: 'center',
+    },
+    modalCancelText: {
+        color: '#aaa',
+        fontSize: 16,
     },
 });
