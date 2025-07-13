@@ -3,13 +3,13 @@ import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Modal, I
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ICONS = {
-  pencil: require('../assets/icons/pencil.png'),
-  trashcan: require('../assets/icons/trashcan.png'),
-  home: require('../assets/icons/home.png'),
-  goals: require('../assets/icons/goals.png'),
-  plus: require('../assets/icons/plus.png'),
-  stats: require('../assets/icons/graphs.png'),
-  list: require('../assets/icons/calculate.png'),
+  pencil: require('./assets/icons/pencil.png'),
+  trashcan: require('./assets/icons/trashcan.png'),
+  home: require('./assets/icons/home.png'),
+  goals: require('./assets/icons/goals.png'),
+  plus: require('./assets/icons/plus.png'),
+  stats: require('./assets/icons/graphs.png'),
+  list: require('./assets/icons/calculate.png'),
 };
 
 const EMOJIS = ['🏖️', '🚗', '🎁', '👟', '👗', '🏠', '📚', '💻', '🛒', '🍽️', '🎸', '🧸', '🐖'];
@@ -21,14 +21,6 @@ interface Goal {
   emoji: string;
   currentAmount: number;
 }
-
-const bottomIcons = [
-  { icon: ICONS.home, key: 'home' },
-  { icon: ICONS.goals, key: 'goals' },
-  { icon: ICONS.plus, key: 'plus' },
-  { icon: ICONS.stats, key: 'stats' },
-  { icon: ICONS.list, key: 'list' },
-];
 
 const GoalsScreen: React.FC<{ goals: Goal[]; setGoals: (goals: Goal[]) => void; navigation?: any }> = ({ goals, setGoals, navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -80,7 +72,7 @@ const GoalsScreen: React.FC<{ goals: Goal[]; setGoals: (goals: Goal[]) => void; 
   function handleBottomMenuPress(idx: number) {
     if (!navigation) return;
     if (idx === 0) {
-      navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+      navigation.navigate('Home'); // Solo navega, la animación ya está definida en el stack
     } else if (idx === 1) {
       navigation.navigate('Goals');
     } else if (idx === 2) {
@@ -150,18 +142,6 @@ const GoalsScreen: React.FC<{ goals: Goal[]; setGoals: (goals: Goal[]) => void; 
           </View>
         </View>
       )}
-      {/* Menú inferior fijo */}
-      <View style={[styles.bottomMenu, { paddingBottom: insets.bottom }]}> 
-        {bottomIcons.map((item, idx) => (
-          <TouchableOpacity
-            key={item.key}
-            style={idx === 2 ? styles.centerBtn : styles.bottomIconBtn}
-            onPress={() => handleBottomMenuPress(idx)}
-          >
-            <Image source={item.icon} style={idx === 2 ? styles.centerIcon : styles.bottomIcon} resizeMode="contain" />
-          </TouchableOpacity>
-        ))}
-      </View>
     </View>
   );
 };
@@ -304,64 +284,30 @@ const styles = StyleSheet.create({
   },
   modalActions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+    marginTop: 16,
+    gap: 8,
   },
   modalBtn: {
     backgroundColor: '#00b894',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 24,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
     marginHorizontal: 4,
+    minWidth: 110,
+    alignItems: 'center',
+    shadowColor: '#00b894',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 4,
+    elevation: 2,
   },
   modalBtnText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: 'bold',
-  },
-  bottomMenu: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: 'rgba(26,35,77,0.95)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderTopWidth: 2,
-    borderTopColor: '#232c5c',
-    zIndex: 10,
-  },
-  bottomIconBtn: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  bottomIcon: {
-    width: 32,
-    height: 32,
-    tintColor: '#fff',
-  },
-  centerBtn: {
-    backgroundColor: '#fff',
-    borderRadius: 32,
-    width: 56,
-    height: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: -24,
-    marginHorizontal: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 6,
-  },
-  centerIcon: {
-    width: 36,
-    height: 36,
-    tintColor: '#1a234d',
+    letterSpacing: 0.2,
   },
   emojiList: {
     flexDirection: 'row',

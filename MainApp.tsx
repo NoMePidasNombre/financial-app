@@ -1,3 +1,4 @@
+// ...existing code...
 import 'react-native-gesture-handler';
 import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
@@ -5,12 +6,13 @@ import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { View, Platform } from 'react-native';
 import AppContent from './AppContent';
-import GoalsScreen from './components/GoalsScreen';
+import GoalsScreen from './GoalsScreen';
 import TransactionHistoryScreen from './components/TransactionHistoryScreen';
 import IngresoModal from './components/IngresoModal';
 import GastoModal from './components/GastoModal';
 import TipoTransaccionModal from './components/TipoTransaccionModal';
 import TransactionEditModal from './components/TransactionEditModal';
+import BottomMenu from './BottomMenu';
 
 const Stack = createStackNavigator();
 
@@ -27,6 +29,7 @@ export default function MainApp() {
 
   // Estado para mostrar el modal de edición
   const [showEditModal, setShowEditModal] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState(0);
 
   // Handler para el botón +
   const handleAddPress = () => setShowTipoModal(true);
@@ -44,8 +47,13 @@ export default function MainApp() {
     setSelectedTipo('ingreso');
   };
 
+
+
+
   // Handler para el botón historial
   const navigationRef = React.useRef<any>(null);
+  // Estado para la ruta actual
+  const [currentRoute, setCurrentRoute] = React.useState('Home');
   const handleHistoryPress = () => {
     // Limpiar cualquier modal de edición global antes de navegar
     setShowEditModal(false);
@@ -55,6 +63,27 @@ export default function MainApp() {
       navigationRef.current.navigate('TransactionHistory');
     }
   };
+
+  // Forzar re-render al cambiar de ruta para que el BottomMenu desaparezca inmediatamente
+// ...existing code...
+
+  // Escuchar cambios de navegación para actualizar la ruta actual
+  React.useEffect(() => {
+    const nav = navigationRef.current;
+    if (!nav || !nav.addListener) return;
+    const updateRoute = () => {
+      // Obtener la ruta activa desde el estado de navegación
+      let state = nav.getRootState?.() || nav.getState?.();
+      while (state && state.routes && state.index != null && state.routes[state.index].state) {
+        state = state.routes[state.index].state;
+      }
+      const route = state && state.routes && state.routes[state.index];
+      if (route && route.name) setCurrentRoute(route.name);
+    };
+    updateRoute(); // Inicial
+    const unsubscribe = nav.addListener('state', updateRoute);
+    return () => unsubscribe && unsubscribe();
+  }, []);
 
   // Calcular saldo y gastos
   const saldo = transactions.reduce((acc, t) => t.tipo === 'ingreso' ? acc + t.monto : acc - t.monto, 0);
@@ -111,20 +140,56 @@ export default function MainApp() {
     setEditData(null);
   };
 
+  function handleBottomMenuPress(idx: number) {
+    if (idx === 0) {
+      setActiveTab(0);
+      navigationRef.current?.navigate('Home');
+    } else if (idx === 1) {
+      setActiveTab(1);
+      navigationRef.current?.navigate('Goals');
+    } else if (idx === 2) {
+      // No cambiar activeTab, solo mostrar el modal de nueva transacción
+      setShowTipoModal(true);
+    } else if (idx === 3) {
+      setActiveTab(3);
+      navigationRef.current?.navigate('Stats');
+    } else if (idx === 4) {
+      // Botón del ábaco: no hacer nada por ahora, funcionalidad futura
+    }
+  }
+
   return (
     <SafeAreaProvider>
       <NavigationContainer ref={navigationRef}>
         <Stack.Navigator
           initialRouteName="Home"
-          screenOptions={{
+          screenOptions={({ route, navigation }) => ({
             headerShown: false,
-            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            cardStyleInterpolator: (props) => {
+              const { current, layouts, next, inverted, closing, index } = props;
+              // Si estamos yendo a Home desde Goals, animar desde la izquierda
+              if (route.name === 'Home' && navigation.getState().routes[navigation.getState().index - 1]?.name === 'Goals') {
+                return {
+                  cardStyle: {
+                    transform: [
+                      {
+                        translateX: current.progress.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [-layouts.screen.width, 0],
+                        }),
+                      },
+                    ],
+                  },
+                };
+              }
+              // Por defecto, animación horizontal iOS
+              return CardStyleInterpolators.forHorizontalIOS(props);
+            },
             gestureEnabled: true,
-          }}
+          })}
         >
-          <Stack.Screen
-            name="Home"
-            children={(props) => (
+          <Stack.Screen name="Home">
+            {props => (
               <AppContent
                 {...props}
                 saldo={saldo}
@@ -135,16 +200,14 @@ export default function MainApp() {
                 onGoalsPress={() => navigationRef.current?.navigate('Goals')}
               />
             )}
-          />
-          <Stack.Screen
-            name="Goals"
-            children={(props) => (
+          </Stack.Screen>
+          <Stack.Screen name="Goals">
+            {props => (
               <GoalsScreen goals={goals} setGoals={setGoals} navigation={props.navigation} />
             )}
-          />
-          <Stack.Screen
-            name="TransactionHistory"
-            children={(props) => (
+          </Stack.Screen>
+          <Stack.Screen name="TransactionHistory">
+            {props => (
               <TransactionHistoryScreen
                 {...props}
                 transactions={transactions}
@@ -153,8 +216,11 @@ export default function MainApp() {
                 onDelete={handleDeleteTransaction}
               />
             )}
-          />
+          </Stack.Screen>
         </Stack.Navigator>
+        {currentRoute !== 'TransactionHistory' && (
+          <BottomMenu onPress={handleBottomMenuPress} activeIndex={activeTab} />
+        )}
         {/* Modals globales */}
         <TipoTransaccionModal
           visible={showTipoModal}
