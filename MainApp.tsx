@@ -52,9 +52,11 @@ export default function MainApp() {
 
   // Handler para el botón historial
   const navigationRef = React.useRef<any>(null);
-  // Estado para la ruta actual
-  const [currentRoute, setCurrentRoute] = React.useState('Home');
+  // Estado para ocultar el menu específicamente
+  const [hideBottomMenu, setHideBottomMenu] = React.useState(false);
   const handleHistoryPress = () => {
+    // Ocultar menu inmediatamente
+    setHideBottomMenu(true);
     // Limpiar cualquier modal de edición global antes de navegar
     setShowEditModal(false);
     setEditIndex(null);
@@ -67,22 +69,25 @@ export default function MainApp() {
   // Forzar re-render al cambiar de ruta para que el BottomMenu desaparezca inmediatamente
 // ...existing code...
 
-  // Escuchar cambios de navegación para actualizar la ruta actual
+  // Escuchar cambios de navegación para mostrar/ocultar el menu
   React.useEffect(() => {
     const nav = navigationRef.current;
     if (!nav || !nav.addListener) return;
-    const updateRoute = () => {
-      // Obtener la ruta activa desde el estado de navegación
-      let state = nav.getRootState?.() || nav.getState?.();
-      while (state && state.routes && state.index != null && state.routes[state.index].state) {
-        state = state.routes[state.index].state;
+    
+    const updateMenuVisibility = () => {
+      const route = nav.getCurrentRoute?.();
+      if (route && route.name) {
+        console.log('Current route:', route.name);
+        setHideBottomMenu(route.name === 'TransactionHistory');
       }
-      const route = state && state.routes && state.routes[state.index];
-      if (route && route.name) setCurrentRoute(route.name);
     };
-    updateRoute(); // Inicial
-    const unsubscribe = nav.addListener('state', updateRoute);
-    return () => unsubscribe && unsubscribe();
+    
+    updateMenuVisibility();
+    const unsubscribe = nav.addListener('state', updateMenuVisibility);
+    
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   // Calcular saldo y gastos
@@ -143,15 +148,18 @@ export default function MainApp() {
   function handleBottomMenuPress(idx: number) {
     if (idx === 0) {
       setActiveTab(0);
+      setHideBottomMenu(false); // Mostrar menu en Home
       navigationRef.current?.navigate('Home');
     } else if (idx === 1) {
       setActiveTab(1);
+      setHideBottomMenu(false); // Mostrar menu en Goals
       navigationRef.current?.navigate('Goals');
     } else if (idx === 2) {
       // No cambiar activeTab, solo mostrar el modal de nueva transacción
       setShowTipoModal(true);
     } else if (idx === 3) {
       setActiveTab(3);
+      setHideBottomMenu(false); // Mostrar menu en Stats
       navigationRef.current?.navigate('Stats');
     } else if (idx === 4) {
       // Botón del ábaco: no hacer nada por ahora, funcionalidad futura
@@ -211,14 +219,17 @@ export default function MainApp() {
               <TransactionHistoryScreen
                 {...props}
                 transactions={transactions}
-                onClose={() => props.navigation.goBack()}
+                onClose={() => {
+                  setHideBottomMenu(false); // Mostrar menu al salir del historial
+                  props.navigation.goBack();
+                }}
                 onEdit={handleEditTransaction}
                 onDelete={handleDeleteTransaction}
               />
             )}
           </Stack.Screen>
         </Stack.Navigator>
-        {currentRoute !== 'TransactionHistory' && (
+        {!hideBottomMenu && (
           <BottomMenu onPress={handleBottomMenuPress} activeIndex={activeTab} />
         )}
         {/* Modals globales */}
