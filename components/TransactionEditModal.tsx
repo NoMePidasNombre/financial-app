@@ -103,10 +103,17 @@ export default function TransactionEditModal({ visible, onClose, onAccept, style
   const categorias = tipo === 'ingreso' ? categoriasIngreso : categoriasGasto;
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+    <TouchableWithoutFeedback onPress={() => {
+      Keyboard.dismiss();
+      setCategoriaMenu(false);
+      setMedioMenu(false);
+    }} accessible={false}>
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
         <BlurView style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }} intensity={80} tint="dark" />
-        <TouchableWithoutFeedback onPress={() => {}} accessible={false}>
+        <TouchableWithoutFeedback onPress={() => {
+          setCategoriaMenu(false);
+          setMedioMenu(false);
+        }} accessible={false}>
           <Animated.View
             style={[
               {

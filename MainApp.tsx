@@ -9,8 +9,6 @@ import AppContent from './AppContent';
 import GoalsScreen from './GoalsScreen';
 import TransactionHistoryScreen from './components/TransactionHistoryScreen';
 import IngresoModal from './components/IngresoModal';
-import GastoModal from './components/GastoModal';
-import TipoTransaccionModal from './components/TipoTransaccionModal';
 import TransactionEditModal from './components/TransactionEditModal';
 import BottomMenu from './BottomMenu';
 
@@ -22,8 +20,7 @@ export default function MainApp() {
   const [editIndex, setEditIndex] = React.useState<number | null>(null);
   const [editData, setEditData] = React.useState(null);
 
-  // Estado para mostrar el modal de selección de tipo y el tipo elegido
-  const [showTipoModal, setShowTipoModal] = React.useState(false);
+  // Estado para mostrar el modal de transacción y el tipo elegido
   const [showTransactionModal, setShowTransactionModal] = React.useState(false);
   const [selectedTipo, setSelectedTipo] = React.useState<'ingreso' | 'gasto'>('ingreso');
 
@@ -32,13 +29,9 @@ export default function MainApp() {
   const [activeTab, setActiveTab] = React.useState(0);
 
   // Handler para el botón +
-  const handleAddPress = () => setShowTipoModal(true);
-
-  // Handler para seleccionar tipo
-  const handleTipoSelect = (tipo: 'ingreso' | 'gasto') => {
-    setSelectedTipo(tipo);
-    setShowTipoModal(false);
-    setTimeout(() => setShowTransactionModal(true), 200); // Pequeña pausa para transición
+  const handleAddPress = () => {
+    setSelectedTipo('ingreso'); // Siempre abrir como ingreso
+    setShowTransactionModal(true); // Abrir directamente el modal de transacción
   };
 
   // Handler para cerrar ambos modals
@@ -155,8 +148,9 @@ export default function MainApp() {
       setHideBottomMenu(false); // Mostrar menu en Goals
       navigationRef.current?.navigate('Goals');
     } else if (idx === 2) {
-      // No cambiar activeTab, solo mostrar el modal de nueva transacción
-      setShowTipoModal(true);
+      // Abrir directamente el modal de nueva transacción (ingreso)
+      setSelectedTipo('ingreso');
+      setShowTransactionModal(true);
     } else if (idx === 3) {
       setActiveTab(3);
       setHideBottomMenu(false); // Mostrar menu en Stats
@@ -233,11 +227,6 @@ export default function MainApp() {
           <BottomMenu onPress={handleBottomMenuPress} activeIndex={activeTab} />
         )}
         {/* Modals globales */}
-        <TipoTransaccionModal
-          visible={showTipoModal}
-          onSelect={handleTipoSelect}
-          onClose={() => setShowTipoModal(false)}
-        />
         {showTransactionModal && (
           <View style={{
             position: 'absolute',
@@ -249,39 +238,22 @@ export default function MainApp() {
             alignItems: 'center',
             zIndex: 9999,
           }}>
-            {selectedTipo === 'ingreso' ? (
-              <IngresoModal
-                visible={showTransactionModal}
-                onClose={handleCloseTransactionModal}
-                onAccept={(monto, categoria, medio) => {
-                  const now = new Date();
-                  const fecha = now.toLocaleDateString('es-AR');
-                  const hora = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
-                  setTransactions([
-                    ...transactions,
-                    { monto, categoria, medio, tipo: 'ingreso', fecha, hora },
-                  ]);
-                  setShowTransactionModal(false);
-                  setSelectedTipo('ingreso');
-                }}
-              />
-            ) : (
-              <GastoModal
-                visible={showTransactionModal}
-                onClose={handleCloseTransactionModal}
-                onAccept={(monto, categoria, medio) => {
-                  const now = new Date();
-                  const fecha = now.toLocaleDateString('es-AR');
-                  const hora = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
-                  setTransactions([
-                    ...transactions,
-                    { monto, categoria, medio, tipo: 'gasto', fecha, hora },
-                  ]);
-                  setShowTransactionModal(false);
-                  setSelectedTipo('ingreso');
-                }}
-              />
-            )}
+            <IngresoModal
+              visible={showTransactionModal}
+              initialTipo={selectedTipo}
+              onClose={handleCloseTransactionModal}
+              onAccept={(monto, categoria, medio, tipo) => {
+                const now = new Date();
+                const fecha = now.toLocaleDateString('es-AR');
+                const hora = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+                setTransactions([
+                  ...transactions,
+                  { monto, categoria, medio, tipo, fecha, hora },
+                ]);
+                setShowTransactionModal(false);
+                setSelectedTipo('ingreso');
+              }}
+            />
           </View>
         )}
         {showEditModal && (

@@ -52,7 +52,7 @@ export default function AddTransactionScreen({ navigation, route }) {
                     >
                         <View style={[styles.container, { backgroundColor: colorFondo + '22', minHeight: 500 }]}> 
                             <Text style={[styles.title, { color: colorFondo }]}>{isEdit ? 'Editar' : (tipo === 'remove' ? 'Nuevo Gasto' : 'Nuevo Ingreso')}</Text>
-                            <View style={styles.switchRow}>
+                            <View style={[styles.switchRow, { marginTop: 48 }]}> 
                                 <TouchableOpacity style={[styles.switchBtn, tipo === 'add' && { backgroundColor: '#00b894' }]} onPress={() => setTipo('add')}><Text style={styles.switchText}>Ingreso</Text></TouchableOpacity>
                                 <TouchableOpacity style={[styles.switchBtn, tipo === 'remove' && { backgroundColor: '#e74c3c' }]} onPress={() => setTipo('remove')}><Text style={styles.switchText}>Gasto</Text></TouchableOpacity>
                             </View>
