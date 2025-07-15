@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 
 const categorias = ['Comida', 'Salida', 'Deporte', 'Juntada', 'Compra'];
@@ -29,6 +30,7 @@ export default function AddTransactionScreen({ navigation, route }) {
         } else if (onAdd) {
             onAdd(newTx);
         }
+        Keyboard.dismiss();
         navigation.goBack();
     };
 
@@ -37,29 +39,49 @@ export default function AddTransactionScreen({ navigation, route }) {
     const colorBtn = tipo === 'remove' ? '#c0392b' : '#009e6d';
 
     return (
-        <View style={[styles.container, { backgroundColor: colorFondo + '22' }]}>
-            <Text style={[styles.title, { color: colorFondo }]}>{isEdit ? 'Editar' : (tipo === 'remove' ? 'Nuevo Gasto' : 'Nuevo Ingreso')}</Text>
-            <View style={styles.switchRow}>
-                <TouchableOpacity style={[styles.switchBtn, tipo === 'add' && { backgroundColor: '#00b894' }]} onPress={() => setTipo('add')}><Text style={styles.switchText}>Ingreso</Text></TouchableOpacity>
-                <TouchableOpacity style={[styles.switchBtn, tipo === 'remove' && { backgroundColor: '#e74c3c' }]} onPress={() => setTipo('remove')}><Text style={styles.switchText}>Gasto</Text></TouchableOpacity>
-            </View>
-            <TextInput style={styles.input} placeholder="Monto" keyboardType="numeric" value={monto} onChangeText={setMonto} />
-            <TextInput style={styles.input} placeholder="Nombre" value={nombre} onChangeText={setNombre} />
-            {tipo === 'remove' && (
-                <Picker selectedValue={categoria} style={styles.input} onValueChange={setCategoria}>
-                    {categorias.map(c => (<Picker.Item label={c} value={c} key={c} />))}
-                </Picker>
-            )}
-            <Picker selectedValue={fuente} style={styles.input} onValueChange={setFuente}>
-                {fuentes.map(f => (<Picker.Item label={f} value={f} key={f} />))}
-            </Picker>
-            <TouchableOpacity style={[styles.addBtn, { backgroundColor: colorBtn }]} onPress={handleSave}>
-                <Text style={styles.addBtnText}>{isEdit ? 'Guardar cambios' : 'Guardar'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.cancelBtn} onPress={() => navigation.goBack()}>
-                <Text style={styles.cancelBtnText}>Cancelar</Text>
-            </TouchableOpacity>
-        </View>
+        <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right', 'top']}>
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+                <KeyboardAvoidingView
+                    style={{ flex: 1 }}
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 32}
+                >
+                    <ScrollView
+                        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+                        keyboardShouldPersistTaps="handled"
+                    >
+                        <View style={[styles.container, { backgroundColor: colorFondo + '22', minHeight: 500 }]}> 
+                            <Text style={[styles.title, { color: colorFondo }]}>{isEdit ? 'Editar' : (tipo === 'remove' ? 'Nuevo Gasto' : 'Nuevo Ingreso')}</Text>
+                            <View style={styles.switchRow}>
+                                <TouchableOpacity style={[styles.switchBtn, tipo === 'add' && { backgroundColor: '#00b894' }]} onPress={() => setTipo('add')}><Text style={styles.switchText}>Ingreso</Text></TouchableOpacity>
+                                <TouchableOpacity style={[styles.switchBtn, tipo === 'remove' && { backgroundColor: '#e74c3c' }]} onPress={() => setTipo('remove')}><Text style={styles.switchText}>Gasto</Text></TouchableOpacity>
+                            </View>
+                            <TextInput style={styles.input} placeholder="Monto" keyboardType={Platform.OS === 'ios' ? 'numeric' : 'number-pad'} value={monto} onChangeText={setMonto} returnKeyType="done" onSubmitEditing={Keyboard.dismiss} />
+                            {Platform.OS === 'android' && (
+                                <TouchableOpacity style={{ marginBottom: 12, alignSelf: 'flex-end', backgroundColor: '#eee', borderRadius: 6, paddingHorizontal: 16, paddingVertical: 8 }} onPress={Keyboard.dismiss}>
+                                    <Text style={{ color: '#232c5c', fontWeight: 'bold' }}>Listo</Text>
+                                </TouchableOpacity>
+                            )}
+                            <TextInput style={styles.input} placeholder="Nombre" value={nombre} onChangeText={setNombre} returnKeyType="done" onSubmitEditing={Keyboard.dismiss} />
+                            {tipo === 'remove' && (
+                                <Picker selectedValue={categoria} style={styles.input} onValueChange={setCategoria}>
+                                    {categorias.map(c => (<Picker.Item label={c} value={c} key={c} />))}
+                                </Picker>
+                            )}
+                            <Picker selectedValue={fuente} style={styles.input} onValueChange={setFuente}>
+                                {fuentes.map(f => (<Picker.Item label={f} value={f} key={f} />))}
+                            </Picker>
+                            <TouchableOpacity style={[styles.addBtn, { backgroundColor: colorBtn }]} onPress={handleSave}>
+                                <Text style={styles.addBtnText}>{isEdit ? 'Guardar cambios' : 'Guardar'}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.cancelBtn} onPress={() => { Keyboard.dismiss(); navigation.goBack(); }}>
+                                <Text style={styles.cancelBtnText}>Cancelar</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </ScrollView>
+                </KeyboardAvoidingView>
+            </TouchableWithoutFeedback>
+        </SafeAreaView>
     );
 }
 

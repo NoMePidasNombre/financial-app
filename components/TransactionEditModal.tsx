@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Animated, Easing, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Animated, Easing, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { parseDecimalInput, isValidDecimalInput } from './utils';
 
@@ -103,21 +103,23 @@ export default function TransactionEditModal({ visible, onClose, onAccept, style
   const categorias = tipo === 'ingreso' ? categoriasIngreso : categoriasGasto;
 
   return (
-    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
-      <BlurView style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }} intensity={80} tint="dark" />
-      <Animated.View
-        style={[
-          {
-            backgroundColor: 'rgba(26,35,77,0.98)',
-            borderRadius: 32,
-            minWidth: 320,
-            maxWidth: 400,
-            width: '90%',
-            padding: 28,
-            alignItems: 'center',
-            justifyContent: 'center',
-            shadowColor: tipo === 'ingreso' ? '#00b894' : '#e74c3c',
-            shadowOffset: { width: 0, height: 8 },
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
+        <BlurView style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }} intensity={80} tint="dark" />
+        <TouchableWithoutFeedback onPress={() => {}} accessible={false}>
+          <Animated.View
+            style={[
+              {
+                backgroundColor: 'rgba(26,35,77,0.98)',
+                borderRadius: 32,
+                minWidth: 320,
+                maxWidth: 400,
+                width: '90%',
+                padding: 28,
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: tipo === 'ingreso' ? '#00b894' : '#e74c3c',
+                shadowOffset: { width: 0, height: 8 },
             shadowOpacity: 0.35,
             shadowRadius: 24,
             elevation: 24,
@@ -182,7 +184,9 @@ export default function TransactionEditModal({ visible, onClose, onAccept, style
             <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#fff' }}>Guardar</Text>
           </TouchableOpacity>
         </View>
-      </Animated.View>
-    </View>
+          </Animated.View>
+        </TouchableWithoutFeedback>
+      </View>
+    </TouchableWithoutFeedback>
   );
 }

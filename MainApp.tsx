@@ -239,7 +239,7 @@ export default function MainApp() {
           onClose={() => setShowTipoModal(false)}
         />
         {showTransactionModal && (
-          <SafeAreaView style={{
+          <View style={{
             position: 'absolute',
             top: 0,
             left: 0,
@@ -282,10 +282,10 @@ export default function MainApp() {
                 }}
               />
             )}
-          </SafeAreaView>
+          </View>
         )}
         {showEditModal && (
-          <SafeAreaView style={{
+          <View style={{
             position: 'absolute',
             top: 0,
             left: 0,
@@ -304,7 +304,7 @@ export default function MainApp() {
               initialData={editData}
               editMode={true}
             />
-          </SafeAreaView>
+          </View>
         )}
       </NavigationContainer>
     </SafeAreaProvider>

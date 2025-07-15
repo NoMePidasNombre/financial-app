@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform, Animated } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform, Animated, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { BlurView } from 'expo-blur';
 
 interface Props {
@@ -39,65 +39,69 @@ export default function IngresoModal({ visible, onClose, onAccept }: Props) {
     const puedeAceptar = !!monto && !!categoria && !!medio && parseFloat(monto.replace(',', '.')) > 0;
 
     return (
-        <View style={styles.overlay}>
-            <BlurView style={styles.absoluteFill} intensity={80} tint="dark" />
-            <Animated.View style={[styles.modal, { transform: [{ scale: scaleAnim }], opacity: opacityAnim }]}>
-                <Text style={styles.title}>Cargar Nueva Transacción</Text>
-                <Text style={styles.label}>Monto</Text>
-                <TextInput
-                    style={[styles.input, { borderColor: '#00b894' }]}
-                    value={monto}
-                    onChangeText={setMonto}
-                    placeholder="$0,00"
-                    placeholderTextColor="#aaa"
-                    keyboardType={Platform.OS === 'ios' ? 'decimal-pad' : 'numeric'}
-                    inputMode="decimal"
-                    maxLength={12}
-                />
-                <Text style={styles.label}>Categoría</Text>
-                <View style={{ width: '100%', position: 'relative' }}>
-                    <TouchableOpacity style={[styles.input, { borderColor: '#00b894' }]} onPress={() => setCategoriaMenu(!categoriaMenu)}>
-                        <Text style={{ color: categoria ? '#fff' : '#aaa' }}>{categoria || 'Seleccionar categoría'}</Text>
-                    </TouchableOpacity>
-                    {categoriaMenu && (
-                        <View style={styles.dropdownMenuAbsolute}>
-                            {categorias.map((cat) => (
-                                <TouchableOpacity key={cat} style={styles.dropdownItem} onPress={() => { setCategoria(cat); setCategoriaMenu(false); }}>
-                                    <Text style={styles.dropdownText}>{cat}</Text>
-                                </TouchableOpacity>
-                            ))}
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+            <View style={styles.overlay}>
+                <BlurView style={styles.absoluteFill} intensity={80} tint="dark" />
+                <TouchableWithoutFeedback onPress={() => {}} accessible={false}>
+                    <Animated.View style={[styles.modal, { transform: [{ scale: scaleAnim }], opacity: opacityAnim }]}>
+                        <Text style={styles.title}>Cargar Nueva Transacción</Text>
+                        <Text style={styles.label}>Monto</Text>
+                        <TextInput
+                            style={[styles.input, { borderColor: '#00b894' }]}
+                            value={monto}
+                            onChangeText={setMonto}
+                            placeholder="$0,00"
+                            placeholderTextColor="#aaa"
+                            keyboardType={Platform.OS === 'ios' ? 'decimal-pad' : 'numeric'}
+                            inputMode="decimal"
+                            maxLength={12}
+                        />
+                        <Text style={styles.label}>Categoría</Text>
+                        <View style={{ width: '100%', position: 'relative' }}>
+                            <TouchableOpacity style={[styles.input, { borderColor: '#00b894' }]} onPress={() => setCategoriaMenu(!categoriaMenu)}>
+                                <Text style={{ color: categoria ? '#fff' : '#aaa' }}>{categoria || 'Seleccionar categoría'}</Text>
+                            </TouchableOpacity>
+                            {categoriaMenu && (
+                                <View style={styles.dropdownMenuAbsolute}>
+                                    {categorias.map((cat) => (
+                                        <TouchableOpacity key={cat} style={styles.dropdownItem} onPress={() => { setCategoria(cat); setCategoriaMenu(false); }}>
+                                            <Text style={styles.dropdownText}>{cat}</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
                         </View>
-                    )}
-                </View>
-                <Text style={styles.label}>Medio</Text>
-                <View style={{ width: '100%', position: 'relative' }}>
-                    <TouchableOpacity style={[styles.input, { borderColor: '#00b894' }]} onPress={() => setMedioMenu(!medioMenu)}>
-                        <Text style={{ color: medio ? '#fff' : '#aaa' }}>{medio || 'Seleccionar medio'}</Text>
-                    </TouchableOpacity>
-                    {medioMenu && (
-                        <View style={styles.dropdownMenuAbsolute}>
-                            {medios.map((m) => (
-                                <TouchableOpacity key={m} style={styles.dropdownItem} onPress={() => { setMedio(m); setMedioMenu(false); }}>
-                                    <Text style={styles.dropdownText}>{m}</Text>
-                                </TouchableOpacity>
-                            ))}
+                        <Text style={styles.label}>Medio</Text>
+                        <View style={{ width: '100%', position: 'relative' }}>
+                            <TouchableOpacity style={[styles.input, { borderColor: '#00b894' }]} onPress={() => setMedioMenu(!medioMenu)}>
+                                <Text style={{ color: medio ? '#fff' : '#aaa' }}>{medio || 'Seleccionar medio'}</Text>
+                            </TouchableOpacity>
+                            {medioMenu && (
+                                <View style={styles.dropdownMenuAbsolute}>
+                                    {medios.map((m) => (
+                                        <TouchableOpacity key={m} style={styles.dropdownItem} onPress={() => { setMedio(m); setMedioMenu(false); }}>
+                                            <Text style={styles.dropdownText}>{m}</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
                         </View>
-                    )}
-                </View>
-                <View style={styles.buttonRow}>
-                    <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-                        <Text style={styles.cancelText}>Cancelar</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.acceptBtn, !puedeAceptar && { opacity: 0.5 }]}
-                        onPress={() => puedeAceptar && onAccept(parseFloat(monto.replace(',', '.')), categoria, medio)}
-                        disabled={!puedeAceptar}
-                    >
-                        <Text style={styles.acceptText}>Guardar</Text>
-                    </TouchableOpacity>
-                </View>
-            </Animated.View>
-        </View>
+                        <View style={styles.buttonRow}>
+                            <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
+                                <Text style={styles.cancelText}>Cancelar</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.acceptBtn, !puedeAceptar && { opacity: 0.5 }]}
+                                onPress={() => puedeAceptar && onAccept(parseFloat(monto.replace(',', '.')), categoria, medio)}
+                                disabled={!puedeAceptar}
+                            >
+                                <Text style={styles.acceptText}>Guardar</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </Animated.View>
+                </TouchableWithoutFeedback>
+            </View>
+        </TouchableWithoutFeedback>
     );
 }
 
