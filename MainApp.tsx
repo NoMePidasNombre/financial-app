@@ -11,6 +11,8 @@ import IngresoModal from './components/IngresoModal';
 import GastoModal from './components/GastoModal';
 import TipoTransaccionModal from './components/TipoTransaccionModal';
 import TransactionEditModal from './components/TransactionEditModal';
+import StatsScreen from './components/StatsScreen';
+import ProfileSelectionScreen from './components/ProfileSelectionScreen';
 
 const Stack = createStackNavigator();
 
@@ -133,6 +135,7 @@ export default function MainApp() {
                 onHistoryPress={handleHistoryPress}
                 goals={goals}
                 onGoalsPress={() => navigationRef.current?.navigate('Goals')}
+                onStatsPress={() => navigationRef.current?.navigate('Stats')}
               />
             )}
           />
@@ -152,6 +155,18 @@ export default function MainApp() {
                 onEdit={handleEditTransaction}
                 onDelete={handleDeleteTransaction}
               />
+            )}
+          />
+          <Stack.Screen
+            name="Stats"
+            children={(props) => (
+              <StatsScreen {...props} />
+            )}
+          />
+          <Stack.Screen
+            name="ProfileSelection"
+            children={(props) => (
+              <ProfileSelectionScreen {...props} />
             )}
           />
         </Stack.Navigator>

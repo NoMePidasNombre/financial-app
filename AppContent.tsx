@@ -1,6 +1,7 @@
 import React from 'react';
 import { StatusBar, StyleSheet, useColorScheme, View, Text, Image, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigationState } from '@react-navigation/native';
 
 const ICONS = {
     settings: require('./assets/icons/settings.png'), // engranaje
@@ -15,10 +16,12 @@ const ICONS = {
 };
 const BG = require('./assets/icons/brain-outline.png');
 
-export default function AppContent({ saldo, gastos, usuario = 'USER123', onAddPress, onHistoryPress, goals = [], onGoalsPress }) {
+export default function AppContent({ saldo, gastos, usuario = 'USER123', onAddPress, onHistoryPress, goals = [], onGoalsPress, onStatsPress, navigation }) {
     const isDarkMode = useColorScheme() === 'dark';
     const insets = useSafeAreaInsets();
     const { width, height } = Dimensions.get('window');
+    const navigationState = useNavigationState(state => state);
+    const currentRoute = navigationState?.routes?.[navigationState.index]?.name;
 
     const topIcons = [
         { icon: ICONS.settings, key: 'settings' },
@@ -44,6 +47,9 @@ export default function AppContent({ saldo, gastos, usuario = 'USER123', onAddPr
         }
     }
     function handleBottomMenuPress(idx) {
+        const routeMap = ['Home', 'Goals', '', 'Stats', 'TransactionHistory'];
+        const targetRoute = routeMap[idx];
+        if (targetRoute === currentRoute) return;
         if (idx === 1) {
             if (onGoalsPress) {
                 onGoalsPress();
@@ -54,6 +60,12 @@ export default function AppContent({ saldo, gastos, usuario = 'USER123', onAddPr
             } else {
                 Alert.alert('Handler no asignado', 'No se pasó onAddPress al componente.');
             }
+        } else if (idx === 3 && navigation) {
+            navigation.navigate('ProfileSelection');
+        } else if (idx === 0 && navigation) {
+            navigation.navigate('Home');
+        } else if (idx === 4 && navigation) {
+            navigation.navigate('TransactionHistory');
         }
     }
 
@@ -125,16 +137,29 @@ export default function AppContent({ saldo, gastos, usuario = 'USER123', onAddPr
                     </View>
                 </View>
                 {/* Menú inferior fijo */}
-                <View style={[styles.bottomMenu, { paddingBottom: insets.bottom }]}>
-                    {bottomIcons.map((item, idx) => (
-                        <TouchableOpacity
-                            key={item.key}
-                            style={idx === 2 ? styles.centerBtn : styles.bottomIconBtn}
-                            onPress={() => handleBottomMenuPress(idx)}
-                        >
-                            <Image source={item.icon} style={idx === 2 ? styles.centerIcon : styles.bottomIcon} resizeMode="contain" />
-                        </TouchableOpacity>
-                    ))}
+                <View style={[styles.bottomMenu, { paddingBottom: insets.bottom }]}> 
+                    {bottomIcons.map((item, idx) => {
+                        const routeMap = ['Home', 'Goals', '', 'Stats', 'TransactionHistory'];
+                        const isActive = routeMap[idx] === currentRoute;
+                        return (
+                            <TouchableOpacity
+                                key={item.key}
+                                style={idx === 2 ? styles.centerBtn : styles.bottomIconBtn}
+                                onPress={() => handleBottomMenuPress(idx)}
+                                disabled={isActive}
+                            >
+                                <Image
+                                    source={item.icon}
+                                    style={[
+                                        idx === 2
+                                            ? [styles.centerIcon, isActive ? { tintColor: '#00e6a0' } : { tintColor: '#1a234d' }]
+                                            : [styles.bottomIcon, isActive ? { tintColor: '#00e6a0' } : { tintColor: '#fff' }]
+                                    ]}
+                                    resizeMode="contain"
+                                />
+                            </TouchableOpacity>
+                        );
+                    })}
                 </View>
             </SafeAreaView>
         </View>

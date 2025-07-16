@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Modal, Image, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BottomMenu from './BottomMenu';
 
 const ICONS = {
   pencil: require('../assets/icons/pencil.png'),
@@ -150,18 +151,12 @@ const GoalsScreen: React.FC<{ goals: Goal[]; setGoals: (goals: Goal[]) => void; 
           </View>
         </View>
       )}
-      {/* Menú inferior fijo */}
-      <View style={[styles.bottomMenu, { paddingBottom: insets.bottom }]}> 
-        {bottomIcons.map((item, idx) => (
-          <TouchableOpacity
-            key={item.key}
-            style={idx === 2 ? styles.centerBtn : styles.bottomIconBtn}
-            onPress={() => handleBottomMenuPress(idx)}
-          >
-            <Image source={item.icon} style={idx === 2 ? styles.centerIcon : styles.bottomIcon} resizeMode="contain" />
-          </TouchableOpacity>
-        ))}
-      </View>
+      <BottomMenu
+        navigation={navigation}
+        currentRoute={navigation?.getState?.()?.routes?.[navigation?.getState?.()?.index]?.name}
+        onAddPress={() => { setModalVisible(true); setEditMode(false); setName(''); setTargetAmount(''); setEmoji(''); }}
+        onGoalsPress={() => navigation.navigate('Goals')}
+      />
     </View>
   );
 };
