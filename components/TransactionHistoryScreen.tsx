@@ -70,7 +70,7 @@ export default function TransactionHistoryScreen({ transactions, onClose, onEdit
         {transactions.length === 0 && (
           <Text style={{ color: '#fff', textAlign: 'center', marginVertical: 20 }}>No hay transacciones registradas.</Text>
         )}
-        {transactions.map((t, idx) => {
+        {transactions.slice().reverse().map((t, idx) => {
           const montoStr = `$${t.monto.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
           const maxCharsInline = 12;
           const montoEnLinea = montoStr.length <= maxCharsInline;

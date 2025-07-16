@@ -124,18 +124,7 @@ export default function AppContent({ saldo, gastos, usuario = 'USER123', onAddPr
                         )}
                     </View>
                 </View>
-                {/* Menú inferior fijo */}
-                <View style={[styles.bottomMenu, { paddingBottom: insets.bottom }]}>
-                    {bottomIcons.map((item, idx) => (
-                        <TouchableOpacity
-                            key={item.key}
-                            style={idx === 2 ? styles.centerBtn : styles.bottomIconBtn}
-                            onPress={() => handleBottomMenuPress(idx)}
-                        >
-                            <Image source={item.icon} style={idx === 2 ? styles.centerIcon : styles.bottomIcon} resizeMode="contain" />
-                        </TouchableOpacity>
-                    ))}
-                </View>
+                {/* Menú inferior eliminado, ahora es global en MainApp */}
             </SafeAreaView>
         </View>
     );
