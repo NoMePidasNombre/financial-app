@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StatusBar, StyleSheet, useColorScheme, View, Text, Image, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 
 const ICONS = {
     settings: require('./assets/icons/settings.png'), // engranaje
@@ -19,6 +20,17 @@ export default function AppContent({ saldo, gastos, usuario = 'USER123', onAddPr
     const isDarkMode = useColorScheme() === 'dark';
     const insets = useSafeAreaInsets();
     const { width, height } = Dimensions.get('window');
+    const navigation = useNavigation();
+
+    // Listener para cuando se enfoca esta pantalla
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('focus', () => {
+            // Esta pantalla está enfocada, asegurar que los menús estén visibles
+            // Los menús se manejan desde MainApp, pero podríamos disparar eventos si fuera necesario
+        });
+
+        return unsubscribe;
+    }, [navigation]);
 
     const topIcons = [
         { icon: ICONS.settings, key: 'settings' },

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Text, TouchableOpacity, Dimensions } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import TransactionEditModal from './TransactionEditModal';
 
 const { width, height } = Dimensions.get('window');
@@ -28,6 +29,17 @@ export default function TransactionHistoryScreen({ transactions, onClose, onEdit
   const [editIdx, setEditIdx] = React.useState<number | null>(null);
   const [initialData, setInitialData] = React.useState<any>(null);
   const [editMode, setEditMode] = React.useState(false);
+  const navigation = useNavigation();
+
+  // Listener para el hardware back button o gesture de volver atrás
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      // Llamar a onClose cuando se use el gesto de volver atrás
+      onClose();
+    });
+
+    return unsubscribe;
+  }, [navigation, onClose]);
 
   // Abrir modal de edición localmente
   const handleEdit = (idx: number, data: any) => {

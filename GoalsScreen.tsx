@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Modal, Image, Dimensions, TouchableWithoutFeedback, Keyboard, StatusBar } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Modal, Image, Dimensions, TouchableWithoutFeedback, Keyboard, StatusBar, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 
 const ICONS = {
   pencil: require('./assets/icons/pencil.png'),
@@ -35,6 +36,17 @@ const GoalsScreen: React.FC<{ goals: Goal[]; setGoals: (goals: Goal[]) => void; 
   const [emoji, setEmoji] = useState('');
   const insets = useSafeAreaInsets();
   const { width } = Dimensions.get('window');
+  const nav = useNavigation();
+
+  // Listener para cuando se enfoca esta pantalla
+  useEffect(() => {
+    const unsubscribe = nav.addListener('focus', () => {
+      // Esta pantalla está enfocada, asegurar que los menús estén visibles
+      // Los menús se manejan desde MainApp, pero podríamos disparar eventos si fuera necesario
+    });
+
+    return unsubscribe;
+  }, [nav]);
 
   // Función para cerrar el teclado y modales
   const closeKeyboard = () => {
@@ -130,52 +142,68 @@ const GoalsScreen: React.FC<{ goals: Goal[]; setGoals: (goals: Goal[]) => void; 
       />
       {/* Modal tipo transacción para añadir/editar meta */}
       {modalVisible && (
-        <TouchableWithoutFeedback onPress={() => { setModalVisible(false); setEditMode(false); setEditId(null); closeKeyboard(); }} accessible={false}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback onPress={() => {}} accessible={false}>
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>{editMode ? 'Editar Meta' : 'Añadir Meta'}</Text>
-                <TouchableWithoutFeedback onPress={() => {}} accessible={false}>
-                  <View style={{ width: '100%' }}>
-                    <TextInput 
-                      style={styles.modalInput} 
-                      placeholder="Nombre" 
-                      value={name} 
-                      onChangeText={setName} 
-                      placeholderTextColor="#ccc"
-                    />
-                  </View>
-                </TouchableWithoutFeedback>
-                <TouchableWithoutFeedback onPress={() => {}} accessible={false}>
-                  <View style={{ width: '100%' }}>
-                    <TextInput 
-                      style={styles.modalInput} 
-                      placeholder="Cantidad" 
-                      value={targetAmount} 
-                      onChangeText={setTargetAmount} 
-                      keyboardType="numeric" 
-                      placeholderTextColor="#ccc"
-                    />
-                  </View>
-                </TouchableWithoutFeedback>
-                <Text style={{ color: '#fff', fontSize: 16, marginBottom: 8, marginTop: 2 }}>Elige un emoji:</Text>
-                <View style={styles.emojiList}>
-                  {EMOJIS.map(e => (
-                    <TouchableOpacity
-                      key={e}
-                      style={[styles.emojiBtn, emoji === e && styles.emojiBtnSelected]}
-                      onPress={() => setEmoji(e)}
-                    >
-                      <Text style={styles.emojiText}>{e}</Text>
-                    </TouchableOpacity>
-                  ))}
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>{editMode ? 'Editar Meta' : 'Añadir Meta'}</Text>
+              {/* Input Nombre */}
+              <TouchableWithoutFeedback onPress={() => {}} accessible={false}>
+                <View style={{ width: '100%' }}>
+                  <TextInput 
+                    style={styles.modalInput} 
+                    placeholder="Nombre" 
+                    value={name} 
+                    onChangeText={setName} 
+                    placeholderTextColor="#ccc"
+                    onFocus={() => { /* Si tuvieras menús, aquí los cerrarías */ }}
+                  />
                 </View>
-                <View style={styles.modalActions}>
-                  <TouchableOpacity style={styles.modalBtn} onPress={saveGoal}><Text style={styles.modalBtnText}>{editMode ? 'Guardar' : 'Añadir'}</Text></TouchableOpacity>
-                  <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#e74c3c' }]} onPress={() => { setModalVisible(false); setEditMode(false); setEditId(null); }}><Text style={styles.modalBtnText}>Cancelar</Text></TouchableOpacity>
+              </TouchableWithoutFeedback>
+              {/* Input Cantidad */}
+              <TouchableWithoutFeedback onPress={() => {}} accessible={false}>
+                <View style={{ width: '100%' }}>
+                  <TextInput 
+                    style={styles.modalInput} 
+                    placeholder="Cantidad" 
+                    value={targetAmount}
+                    onChangeText={text => {
+                      // Permitir solo números y una coma, máximo 2 decimales
+                      let nuevo = text.replace(/[^\d,]/g, '');
+                      const partes = nuevo.split(',');
+                      if (partes.length > 2) {
+                        nuevo = partes[0] + ',' + partes.slice(1).join('').replace(/,/g, '');
+                      }
+                      if (nuevo.includes(',')) {
+                        const [ent, dec] = nuevo.split(',');
+                        nuevo = ent + ',' + (dec ? dec.slice(0, 2) : '');
+                      }
+                      setTargetAmount(nuevo);
+                    }}
+                    keyboardType={Platform.OS === 'ios' ? 'decimal-pad' : 'numeric'}
+                    inputMode="decimal"
+                    maxLength={12}
+                    placeholderTextColor="#ccc"
+                    onFocus={() => { /* Si tuvieras menús, aquí los cerrarías */ }}
+                  />
                 </View>
+              </TouchableWithoutFeedback>
+              <Text style={{ color: '#fff', fontSize: 16, marginBottom: 8, marginTop: 2 }}>Elige un emoji:</Text>
+              <View style={styles.emojiList}>
+                {EMOJIS.map(e => (
+                  <TouchableOpacity
+                    key={e}
+                    style={[styles.emojiBtn, emoji === e && styles.emojiBtnSelected]}
+                    onPress={() => setEmoji(e)}
+                  >
+                    <Text style={styles.emojiText}>{e}</Text>
+                  </TouchableOpacity>
+                ))}
               </View>
-            </TouchableWithoutFeedback>
+              <View style={styles.modalActions}>
+                <TouchableOpacity style={styles.modalBtn} onPress={saveGoal}><Text style={styles.modalBtnText}>{editMode ? 'Guardar' : 'Añadir'}</Text></TouchableOpacity>
+                <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#e74c3c' }]} onPress={() => { setModalVisible(false); setEditMode(false); setEditId(null); }}><Text style={styles.modalBtnText}>Cancelar</Text></TouchableOpacity>
+              </View>
+            </View>
           </View>
         </TouchableWithoutFeedback>
       )}

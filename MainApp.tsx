@@ -55,6 +55,7 @@ export default function MainApp() {
     if (idx === 2) { // Historia
       setHideBottomMenu(true);
       setHideTopMenu(true);
+      setActiveTab(-1); // No hay tab activo en historia
       navigationRef.current?.navigate('TransactionHistory');
     }
     // Agregar más funcionalidades según sea necesario
@@ -64,6 +65,7 @@ export default function MainApp() {
     // Ocultar menu inmediatamente
     setHideBottomMenu(true);
     setHideTopMenu(true);
+    setActiveTab(-1); // No hay tab activo en historia
     // Limpiar cualquier modal de edición global antes de navegar
     setShowEditModal(false);
     setEditIndex(null);
@@ -152,16 +154,44 @@ export default function MainApp() {
     setEditData(null);
   };
 
+  // Función para restablecer estado de navegación
+  const resetNavigationState = (routeName: string) => {
+    // Limpiar modales
+    setShowEditModal(false);
+    setShowTransactionModal(false);
+    setEditIndex(null);
+    setEditData(null);
+    
+    // Configurar menús según la pantalla
+    switch (routeName) {
+      case 'Home':
+        setHideBottomMenu(false);
+        setHideTopMenu(false);
+        setActiveTab(0);
+        break;
+      case 'Goals':
+        setHideBottomMenu(false);
+        setHideTopMenu(false);
+        setActiveTab(1);
+        break;
+      case 'TransactionHistory':
+        setHideBottomMenu(true);
+        setHideTopMenu(true);
+        setActiveTab(-1);
+        break;
+      default:
+        setHideBottomMenu(false);
+        setHideTopMenu(false);
+        setActiveTab(0);
+    }
+  };
+
   function handleBottomMenuPress(idx: number) {
     if (idx === 0) {
-      setActiveTab(0);
-      setHideBottomMenu(false); // Mostrar menu en Home
-      setHideTopMenu(false); // Mostrar top menu en Home
+      resetNavigationState('Home');
       navigationRef.current?.navigate('Home');
     } else if (idx === 1) {
-      setActiveTab(1);
-      setHideBottomMenu(false); // Mostrar menu en Goals
-      setHideTopMenu(false); // Mostrar top menu en Goals
+      resetNavigationState('Goals');
       navigationRef.current?.navigate('Goals');
     } else if (idx === 2) {
       // Abrir directamente el modal de nueva transacción (ingreso)
@@ -178,7 +208,19 @@ export default function MainApp() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer ref={navigationRef}>
+      <NavigationContainer 
+        ref={navigationRef}
+        onStateChange={(state) => {
+          // Detectar cambios de navegación y restaurar menús
+          if (state) {
+            const currentRoute = state.routes[state.index];
+            const routeName = currentRoute.name;
+            
+            // Restablecer estado según la ruta actual
+            resetNavigationState(routeName);
+          }
+        }}
+      >
         <Stack.Navigator
           id={undefined}
           initialRouteName="Home"
@@ -231,8 +273,7 @@ export default function MainApp() {
                 {...props}
                 transactions={transactions}
                 onClose={() => {
-                  setHideBottomMenu(false); // Mostrar menu al salir del historial
-                  setHideTopMenu(false); // Mostrar top menu al salir del historial
+                  resetNavigationState('Home'); // Restablecer estado para Home
                   props.navigation.goBack();
                 }}
                 onEdit={handleEditTransaction}
