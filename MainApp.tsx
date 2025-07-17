@@ -4,13 +4,14 @@ import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { View, Platform } from 'react-native';
+import { View, Platform, Alert } from 'react-native';
 import AppContent from './AppContent';
 import GoalsScreen from './GoalsScreen';
 import TransactionHistoryScreen from './components/TransactionHistoryScreen';
 import IngresoModal from './components/IngresoModal';
 import TransactionEditModal from './components/TransactionEditModal';
 import BottomMenu from './BottomMenu';
+import TopMenu from './TopMenu';
 
 const Stack = createStackNavigator();
 
@@ -47,9 +48,24 @@ export default function MainApp() {
   const navigationRef = React.useRef<any>(null);
   // Estado para ocultar el menu específicamente
   const [hideBottomMenu, setHideBottomMenu] = React.useState(false);
+  const [hideTopMenu, setHideTopMenu] = React.useState(false);
+
+  // Handler para el TopMenu
+  const handleTopMenuPress = (idx: number) => {
+    if (idx === 2) { // Historia
+      setHideBottomMenu(true);
+      setHideTopMenu(true);
+      setActiveTab(-1); // No hay tab activo en historia
+      navigationRef.current?.navigate('TransactionHistory');
+    }
+    // Agregar más funcionalidades según sea necesario
+  };
+
   const handleHistoryPress = () => {
     // Ocultar menu inmediatamente
     setHideBottomMenu(true);
+    setHideTopMenu(true);
+    setActiveTab(-1); // No hay tab activo en historia
     // Limpiar cualquier modal de edición global antes de navegar
     setShowEditModal(false);
     setEditIndex(null);
@@ -138,14 +154,44 @@ export default function MainApp() {
     setEditData(null);
   };
 
+  // Función para restablecer estado de navegación
+  const resetNavigationState = (routeName: string) => {
+    // Limpiar modales
+    setShowEditModal(false);
+    setShowTransactionModal(false);
+    setEditIndex(null);
+    setEditData(null);
+    
+    // Configurar menús según la pantalla
+    switch (routeName) {
+      case 'Home':
+        setHideBottomMenu(false);
+        setHideTopMenu(false);
+        setActiveTab(0);
+        break;
+      case 'Goals':
+        setHideBottomMenu(false);
+        setHideTopMenu(false);
+        setActiveTab(1);
+        break;
+      case 'TransactionHistory':
+        setHideBottomMenu(true);
+        setHideTopMenu(true);
+        setActiveTab(-1);
+        break;
+      default:
+        setHideBottomMenu(false);
+        setHideTopMenu(false);
+        setActiveTab(0);
+    }
+  };
+
   function handleBottomMenuPress(idx: number) {
     if (idx === 0) {
-      setActiveTab(0);
-      setHideBottomMenu(false); // Mostrar menu en Home
+      resetNavigationState('Home');
       navigationRef.current?.navigate('Home');
     } else if (idx === 1) {
-      setActiveTab(1);
-      setHideBottomMenu(false); // Mostrar menu en Goals
+      resetNavigationState('Goals');
       navigationRef.current?.navigate('Goals');
     } else if (idx === 2) {
       // Abrir directamente el modal de nueva transacción (ingreso)
@@ -162,8 +208,21 @@ export default function MainApp() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer ref={navigationRef}>
+      <NavigationContainer 
+        ref={navigationRef}
+        onStateChange={(state) => {
+          // Detectar cambios de navegación y restaurar menús
+          if (state) {
+            const currentRoute = state.routes[state.index];
+            const routeName = currentRoute.name;
+            
+            // Restablecer estado según la ruta actual
+            resetNavigationState(routeName);
+          }
+        }}
+      >
         <Stack.Navigator
+          id={undefined}
           initialRouteName="Home"
           screenOptions={({ route, navigation }) => ({
             headerShown: false,
@@ -214,7 +273,7 @@ export default function MainApp() {
                 {...props}
                 transactions={transactions}
                 onClose={() => {
-                  setHideBottomMenu(false); // Mostrar menu al salir del historial
+                  resetNavigationState('Home'); // Restablecer estado para Home
                   props.navigation.goBack();
                 }}
                 onEdit={handleEditTransaction}
@@ -223,6 +282,9 @@ export default function MainApp() {
             )}
           </Stack.Screen>
         </Stack.Navigator>
+        {!hideTopMenu && (
+          <TopMenu onPress={handleTopMenuPress} />
+        )}
         {!hideBottomMenu && (
           <BottomMenu onPress={handleBottomMenuPress} activeIndex={activeTab} />
         )}

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StatusBar, StyleSheet, useColorScheme, View, Text, Image, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 
 const ICONS = {
     settings: require('./assets/icons/settings.png'), // engranaje
@@ -19,6 +20,17 @@ export default function AppContent({ saldo, gastos, usuario = 'USER123', onAddPr
     const isDarkMode = useColorScheme() === 'dark';
     const insets = useSafeAreaInsets();
     const { width, height } = Dimensions.get('window');
+    const navigation = useNavigation();
+
+    // Listener para cuando se enfoca esta pantalla
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('focus', () => {
+            // Esta pantalla está enfocada, asegurar que los menús estén visibles
+            // Los menús se manejan desde MainApp, pero podríamos disparar eventos si fuera necesario
+        });
+
+        return unsubscribe;
+    }, [navigation]);
 
     const topIcons = [
         { icon: ICONS.settings, key: 'settings' },
@@ -73,22 +85,7 @@ export default function AppContent({ saldo, gastos, usuario = 'USER123', onAddPr
             {/* Marca de agua */}
             <Image source={BG} style={bgWatermarkStyle} resizeMode="contain" />
             <SafeAreaView style={styles.safeAreaBg}>
-                {/* Menú superior fijo */}
-                <View style={[styles.topMenu, { paddingTop: insets.top }]}>
-                    <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-                    {/* Engranaje a la izquierda */}
-                    <TouchableOpacity key={topIcons[0].key} style={styles.topIconBtn} onPress={() => handleTopMenuPress(0)}>
-                        <Image source={topIcons[0].icon} style={styles.topIcon} resizeMode="contain" />
-                    </TouchableOpacity>
-                    <View style={{ flex: 1 }} />
-                    {/* Otros iconos a la derecha */}
-                    {topIcons.slice(1).map((item, idx) => (
-                        <TouchableOpacity key={item.key} style={styles.topIconBtn} onPress={() => handleTopMenuPress(idx + 1)}>
-                            <Image source={item.icon} style={styles.topIcon} resizeMode="contain" />
-                        </TouchableOpacity>
-                    ))}
-                </View>
-                {/* Contenido principal */}
+                {/* Contenido principal - TopMenu ahora es global */}
                 <View style={[styles.content, { paddingTop: 70 + insets.top, paddingBottom: 80 + insets.bottom }]}>
                     <Text style={styles.bienvenida}>BIENVENIDO {usuario}</Text>
                     <View style={styles.cardDatos}>
@@ -134,20 +131,6 @@ const styles = StyleSheet.create({
     safeAreaBg: {
         flex: 1,
         backgroundColor: 'rgba(10,42,54,0.85)', // fallback overlay
-    },
-    topMenu: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-        alignItems: 'center',
-        backgroundColor: 'rgba(26,35,77,0.95)',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderBottomWidth: 2,
-        borderBottomColor: '#232c5c',
     },
     content: {
         flex: 1,
@@ -203,14 +186,6 @@ const styles = StyleSheet.create({
         color: '#e74c3c',
         fontSize: 18,
         fontWeight: 'bold',
-    },
-    topIconBtn: {
-        marginLeft: 18,
-    },
-    topIcon: {
-        width: 28,
-        height: 28,
-        tintColor: '#fff',
     },
     cardMetas: {
         backgroundColor: 'rgba(26,35,77,0.98)',
