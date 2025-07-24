@@ -34,12 +34,11 @@ export default function TransactionHistoryScreen({ transactions, onClose, onEdit
   // Listener para el hardware back button o gesture de volver atrás
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-      // Llamar a onClose cuando se use el gesto de volver atrás
-      onClose();
+      // Solo restaurar el estado global, no llamar a onClose ni goBack
+      // Se espera que MainApp maneje el resetNavigationState en onStateChange
     });
-
     return unsubscribe;
-  }, [navigation, onClose]);
+  }, [navigation]);
 
   // Abrir modal de edición localmente
   const handleEdit = (idx: number, data: any) => {

@@ -224,30 +224,52 @@ export default function MainApp() {
         <Stack.Navigator
           id={undefined}
           initialRouteName="Home"
-          screenOptions={({ route, navigation }) => ({
-            headerShown: false,
-            cardStyleInterpolator: (props) => {
-              const { current, layouts, next, inverted, closing, index } = props;
-              // Si estamos yendo a Home desde Goals, animar desde la izquierda
-              if (route.name === 'Home' && navigation.getState().routes[navigation.getState().index - 1]?.name === 'Goals') {
-                return {
-                  cardStyle: {
-                    transform: [
-                      {
-                        translateX: current.progress.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [-layouts.screen.width, 0],
-                        }),
-                      },
-                    ],
-                  },
-                };
-              }
-              // Por defecto, animación horizontal iOS
-              return CardStyleInterpolators.forHorizontalIOS(props);
-            },
-            gestureEnabled: true,
-          })}
+          screenOptions={({ route, navigation }) => {
+            let gestureEnabled = true;
+            if (route.name === 'Home' || route.name === 'Goals') {
+              gestureEnabled = false;
+            }
+            return {
+              headerShown: false,
+              gestureEnabled,
+              cardStyleInterpolator: (props) => {
+                const { current, layouts } = props;
+                const prevRoute = navigation.getState().routes[navigation.getState().index - 1]?.name;
+                // Si estamos yendo a Home desde TransactionHistory, animar desde la izquierda
+                if (route.name === 'Home' && prevRoute === 'TransactionHistory') {
+                  return {
+                    cardStyle: {
+                      transform: [
+                        {
+                          translateX: current.progress.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [-layouts.screen.width, 0],
+                          }),
+                        },
+                      ],
+                    },
+                  };
+                }
+                // Si estamos yendo a Home desde Goals, animar desde la izquierda
+                if (route.name === 'Home' && prevRoute === 'Goals') {
+                  return {
+                    cardStyle: {
+                      transform: [
+                        {
+                          translateX: current.progress.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [-layouts.screen.width, 0],
+                          }),
+                        },
+                      ],
+                    },
+                  };
+                }
+                // Por defecto, animación horizontal iOS
+                return CardStyleInterpolators.forHorizontalIOS(props);
+              },
+            };
+          }}
         >
           <Stack.Screen name="Home">
             {props => (
@@ -273,7 +295,10 @@ export default function MainApp() {
                 {...props}
                 transactions={transactions}
                 onClose={() => {
-                  resetNavigationState('Home'); // Restablecer estado para Home
+                  // Restaurar menús y estado según la pantalla previa
+                  const navState = props.navigation.getState?.();
+                  const prevRoute = navState?.routes[navState.index - 1]?.name;
+                  resetNavigationState(prevRoute || 'Home');
                   props.navigation.goBack();
                 }}
                 onEdit={handleEditTransaction}
