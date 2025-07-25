@@ -25,7 +25,7 @@ export default function HistoryScreen({ route, navigation }) {
     return (
         <SafeAreaView style={styles.container}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+                <TouchableOpacity onPress={() => route.params?.onClose ? route.params.onClose() : navigation.goBack()} style={styles.backBtn}>
                     <Text style={styles.backBtnText}>Volver</Text>
                 </TouchableOpacity>
                 <Text style={[styles.title, { flex: 1 }]}>Historial de Transacciones</Text>
